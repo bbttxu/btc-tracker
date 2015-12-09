@@ -4,6 +4,7 @@
   "description": "Use Coinbase Exchange websocket feed to trigger pricing change alerts",
   "main": "ws.coffee",
   "scripts": {
+		"start": "nodemon ws.coffee",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
