@@ -48,8 +48,8 @@ module.exports = ( ws, sms, percentage, time, span )->
     client.sell payload, ( err, response )->
       console.log err, response.body
 
-  splitSells = (price, amount)->
-    R.map sell, buys price, amount
+  splitSells = (price, amount, max)->
+    R.map sell, buys price, amount, max
 
   buyIt = (options)->
 
@@ -74,7 +74,8 @@ module.exports = ( ws, sms, percentage, time, span )->
       console.log json
       R.remove json.client_oid, outstandingReceived
       price = ( Math.round( parseFloat( 100 * json.funds ) / parseFloat( json.size ) ) / 100 ).toFixed(2)
-      splitSells price, json.size
+      max = Math.max.apply null, prices
+      splitSells price, json.size, max
 
 
   handleMatch = (json)->
