@@ -3,7 +3,7 @@ R = require 'ramda'
 buys = (price, amount)->
 
   MIN = 3
-  MAX = 5
+  MAX = 6
 
   start = Math.floor( price * 10 ) * 10
 

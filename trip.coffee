@@ -104,7 +104,7 @@ module.exports = ( ws, sms, percentage, time, span )->
       if lastNotification.isBefore( moment().subtract( time, span ) )
         console.log 'NOTIFY!', pct, trade.price, max
 
-        buyIt size: 0.03
+        buyIt size: 0.04
 
         lastNotification = moment()
         trades = []
