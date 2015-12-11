@@ -4,6 +4,7 @@
   "description": "Use Coinbase Exchange websocket feed to trigger pricing change alerts",
   "main": "ws.coffee",
   "scripts": {
+    "start": "nodemon ws.coffee",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -11,9 +12,11 @@
   "dependencies": {
     "accounting": "^0.4.1",
     "clockwork": "^0.1.0",
+    "coinbase-exchange": "^0.2.1",
     "dotenv": "^1.2.0",
     "moment": "^2.10.6",
     "ramda": "^0.18.0",
+    "uuid": "^2.0.1",
     "ws": "^0.8.0"
   }
 }
