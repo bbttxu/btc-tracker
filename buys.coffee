@@ -35,13 +35,14 @@ buys = (price, amount, limit)->
   buys = R.map priceBuys, prices
 
   downsample = (set)->
-    index = Math.floor( Math.random() * set.length )
-    maximum = set[index].price * set[index].size
-    minimum = price * set[index].size
+    if set.length > 0
+      index = Math.floor( Math.random() * set.length )
+      maximum = set[index].price * set[index].size
+      minimum = price * set[index].size
 
-    average = ( maximum + minimum ) / 2
+      average = ( maximum + minimum ) / 2
 
-    set[index].size = ( average / set[index].price ).toFixed BTC_PLACES
+      set[index].size = ( average / set[index].price ).toFixed BTC_PLACES
 
     set
 
