@@ -18,10 +18,12 @@ module.exports = ( ws, sms, percentage, time, span )->
   lastNotification = moment()
   trades = []
 
+  maxPrice = undefined
+
   outstandingReceived = []
   waitingToBeFilled = []
 
-  console.log "Set trip at #{toPct( percentage )}% in #{time} #{span}, starting #{lastNotification.format()}"
+  console.log "Set trip at #{toPct( percentage )}% over #{time} #{span}, starting #{lastNotification.format()}"
 
   old = (a)->
     # console.log moment(a.ms).format(), moment().subtract( time, span ).format(), moment.unix(a.ms).isBefore moment().subtract( time, span )
@@ -74,8 +76,7 @@ module.exports = ( ws, sms, percentage, time, span )->
       console.log json
       R.remove json.client_oid, outstandingReceived
       price = ( Math.round( parseFloat( 100 * json.funds ) / parseFloat( json.size ) ) / 100 ).toFixed(2)
-      max = Math.max.apply null, prices
-      splitSells price, json.size, max
+      splitSells price, json.size, maxPrice
 
 
   handleMatch = (json)->
@@ -105,6 +106,8 @@ module.exports = ( ws, sms, percentage, time, span )->
       if lastNotification.isBefore( moment().subtract( time, span ) )
         console.log 'NOTIFY!', pct, trade.price, max
 
+        maxPrice = max
+
         buyIt size: 0.04
 
         lastNotification = moment()
@@ -132,7 +135,7 @@ module.exports = ( ws, sms, percentage, time, span )->
     min = Math.min.apply null, prices
     max = Math.max.apply null, prices
 
-    console.log 'SPREAD', toPct( difference( max, min ) ), acct.formatMoney( ( max - min ) / 100), acct.formatMoney( min / 100), acct.formatMoney( max / 100), trades.length
+    console.log 'SPREAD', "#{time} #{span}", toPct( percentage), toPct( difference( max, min ) ), acct.formatMoney( ( max - min ) / 100), acct.formatMoney( min / 100), acct.formatMoney( max / 100), trades.length
 
-  setInterval monitorStats, 60 * 1000
+  setInterval monitorStats, time * 60 * 1000
 
