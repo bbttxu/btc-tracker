@@ -15,7 +15,7 @@ module.exports = ( ws, sms, percentage, time, span )->
   toPct = ( decimal )->
     ( decimal * 100 ).toFixed(1) + '%'
 
-  lastNotification = moment()
+  lastNotification = moment().subtract( time, span )
   trades = []
 
   maxPrice = undefined
@@ -46,9 +46,12 @@ module.exports = ( ws, sms, percentage, time, span )->
 
     payload = R.merge order, options
     # console.log payload
+    payload.size = 0.01 if payload.size < 0.01
+
 
     client.sell payload, ( err, response )->
-      console.log err, response.body
+      data = JSON.parse response.body
+      console.log err, R.pick ['price', 'size'], data
 
   splitSells = (price, amount, max)->
     R.map sell, buys price, amount, max
@@ -101,7 +104,7 @@ module.exports = ( ws, sms, percentage, time, span )->
 
     if pct <= percentage
 
-      console.log 'HIT!', pct, trade.price, max
+      # console.log 'HIT!', pct, trade.price, max
 
       if lastNotification.isBefore( moment().subtract( time, span ) )
         console.log 'NOTIFY!', pct, trade.price, max
