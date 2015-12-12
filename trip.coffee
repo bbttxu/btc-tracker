@@ -93,7 +93,7 @@ module.exports = ( ws, sms, percentage, time, span, size )->
 
     max = Math.max.apply null, prices
 
-    trades.push trade unless trades.length is 1
+    trades.push trade unless trades.length is 0
 
     # console.log 'a', trade.price, max, trade.price < max
 
