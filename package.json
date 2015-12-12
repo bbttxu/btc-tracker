@@ -7,7 +7,8 @@
   "scripts": {
     "start": "coffee ws.coffee",
     "logs": "modulus project logs tail -p 'btc-trader'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha",
+    "dev": "mocha -w"
   },
   "engines": {
     "node": "5.2.x"
@@ -24,5 +25,9 @@
     "ramda": "^0.18.0",
     "uuid": "^2.0.1",
     "ws": "^0.8.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.3.4",
+    "should": "^8.0.1"
   }
 }
