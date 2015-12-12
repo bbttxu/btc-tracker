@@ -93,9 +93,9 @@ module.exports = ( ws, sms, percentage, time, span, size )->
 
     max = Math.max.apply null, prices
 
-    maxPrice = max / 100.0
+    trades.push trade unless trades.length is 1
 
-    trades.push trade unless trades.length is 0
+    # console.log 'a', trade.price, max, trade.price < max
 
     pct = ( ( trade.price - max ) / max )
 
@@ -103,6 +103,8 @@ module.exports = ( ws, sms, percentage, time, span, size )->
 
       if lastNotification.isBefore( moment().subtract( time, span ) )
         console.log 'NOTIFY!', pct, trade.price, max
+
+        maxPrice = max / 100.0
 
         buyIt size: size
 
