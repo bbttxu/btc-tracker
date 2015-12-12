@@ -10,7 +10,7 @@ buys = require './buys'
 
 # buys '418.41', 0.07
 
-module.exports = ( ws, sms, percentage, time, span )->
+module.exports = ( ws, sms, percentage, time, span, size )->
 
   toPct = ( decimal )->
     ( decimal * 100 ).toFixed(1) + '%'
@@ -104,7 +104,7 @@ module.exports = ( ws, sms, percentage, time, span )->
       if lastNotification.isBefore( moment().subtract( time, span ) )
         console.log 'NOTIFY!', pct, trade.price, max
 
-        buyIt size: 0.04
+        buyIt size: size
 
         lastNotification = moment()
         trades = []
