@@ -48,7 +48,7 @@ module.exports = ( ws, sms, percentage, time, span, size )->
 
     client.sell payload, ( err, response )->
       data = JSON.parse response.body
-      console.log 'sell', err, R.pick ['price', 'size'], data
+      console.log 'sell', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
   splitSells = (price, amount, max)->
     console.log 'splitSells', price, amount, max
@@ -68,7 +68,7 @@ module.exports = ( ws, sms, percentage, time, span, size )->
 
     client.buy payload, (err, response)->
       data = JSON.parse response.body
-      console.log 'buy', err, data
+      console.log 'buy', err, R.pick ['type', 'price', 'size', 'created_at', 'product_id'], data
 
   handleReceived = (json)->
     if R.contains json.client_oid, outstandingReceived
@@ -102,7 +102,7 @@ module.exports = ( ws, sms, percentage, time, span, size )->
     if pct <= percentage
 
       if lastNotification.isBefore( moment().subtract( time, span ) )
-        console.log 'NOTIFY!', pct, trade.price, max
+        console.log "NOTIFY! #{toPct( pct )}% within #{time} #{span}", trade.price, max
 
         maxPrice = max / 100.0
 
