@@ -7,6 +7,8 @@ buys = (price, amount, limit)->
   MIN = 1
   MAX = 10
 
+  BTC_PLACES = 7
+
   LOSS = price * 100.0 / 99.75
 
   start = Math.floor( price * 10 ) * 10
@@ -27,7 +29,7 @@ buys = (price, amount, limit)->
   priceBuys = (value)->
     buyPrice = ( start / 100 ) + ( value ) + ( value / 100 )
     buyOrder =
-      size: ( amount / prices.length ).toFixed(8)
+      size: ( amount / prices.length ).toFixed BTC_PLACES
       price: value.toFixed(2)
 
   buys = R.map priceBuys, prices
@@ -39,7 +41,7 @@ buys = (price, amount, limit)->
 
     average = ( maximum + minimum ) / 2
 
-    set[index].size = ( average / set[index].price ).toFixed 8
+    set[index].size = ( average / set[index].price ).toFixed BTC_PLACES
 
     set
 

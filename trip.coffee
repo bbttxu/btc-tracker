@@ -51,7 +51,7 @@ module.exports = ( ws, sms, percentage, time, span )->
 
     client.sell payload, ( err, response )->
       data = JSON.parse response.body
-      console.log err, R.pick ['price', 'size'], data
+      console.log 'sell', err, R.pick ['price', 'size'], data
 
   splitSells = (price, amount, max)->
     R.map sell, buys price, amount, max
@@ -68,15 +68,15 @@ module.exports = ( ws, sms, percentage, time, span )->
     payload = R.merge order, options
     outstandingReceived.push payload.client_oid
 
-    console.log payload
+    # console.log payload
 
     client.buy payload, (err, response)->
-      console.log err, response.body
+      console.log 'buy', err, response.body
 
   handleReceived = (json)->
     # console.log json.client_oid, outstandingReceived if json.client_oid
     if R.contains json.client_oid, outstandingReceived
-      console.log json
+      # console.log json
       R.remove json.client_oid, outstandingReceived
       price = ( Math.round( parseFloat( 100 * json.funds ) / parseFloat( json.size ) ) / 100 ).toFixed(2)
       splitSells price, json.size, maxPrice
