@@ -7,7 +7,7 @@ buys = (price, amount, limit)->
   MIN = 1
   MAX = 10
 
-  BTC_PLACES = 7
+  BTC_PLACES = 8
 
   LOSS = price * 100.0 / 99.75
 
