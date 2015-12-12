@@ -10,21 +10,22 @@ buys = require './buys'
 
 # buys '418.41', 0.07
 
-module.exports = ( ws, sms, percentage, time, span )->
+module.exports = ( ws, sms, percentage, time, span, size )->
 
   toPct = ( decimal )->
     ( decimal * 100 ).toFixed(1) + '%'
 
-  lastNotification = moment()
+  lastNotification = moment().subtract( time, span ).add( 1, span )
   trades = []
+
+  maxPrice = undefined
 
   outstandingReceived = []
   waitingToBeFilled = []
 
-  console.log "Set trip at #{toPct( percentage )}% in #{time} #{span}, starting #{lastNotification.format()}"
+  console.log "Set trip at #{toPct( percentage )}% over #{time} #{span}, starting #{lastNotification.format()}"
 
   old = (a)->
-    # console.log moment(a.ms).format(), moment().subtract( time, span ).format(), moment.unix(a.ms).isBefore moment().subtract( time, span )
     moment(a.ms).isBefore moment().subtract( time, span )
 
   getPrice = R.pluck 'price'
@@ -35,21 +36,23 @@ module.exports = ( ws, sms, percentage, time, span )->
     ( ( min - max ) / max )
 
   sell = (options)->
-    # console.log options
-
     order =
       product_id: 'BTC-USD'
       client_oid: uuid.v4()
       size: .01
 
     payload = R.merge order, options
-    # console.log payload
+
+    payload.size = 0.01 if payload.size < 0.01
+
 
     client.sell payload, ( err, response )->
-      console.log err, response.body
+      data = JSON.parse response.body
+      console.log 'sell', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
-  splitSells = (price, amount)->
-    R.map sell, buys price, amount
+  splitSells = (price, amount, max)->
+    console.log 'splitSells', price, amount, max
+    R.map sell, buys price, amount, max
 
   buyIt = (options)->
 
@@ -63,18 +66,15 @@ module.exports = ( ws, sms, percentage, time, span )->
     payload = R.merge order, options
     outstandingReceived.push payload.client_oid
 
-    console.log payload
-
     client.buy payload, (err, response)->
-      console.log err, response.body
+      data = JSON.parse response.body
+      console.log 'buy', err, R.pick ['type', 'price', 'size', 'created_at', 'product_id'], data
 
   handleReceived = (json)->
-    # console.log json.client_oid, outstandingReceived if json.client_oid
     if R.contains json.client_oid, outstandingReceived
-      console.log json
       R.remove json.client_oid, outstandingReceived
       price = ( Math.round( parseFloat( 100 * json.funds ) / parseFloat( json.size ) ) / 100 ).toFixed(2)
-      splitSells price, json.size
+      splitSells price, json.size, maxPrice
 
 
   handleMatch = (json)->
@@ -95,16 +95,18 @@ module.exports = ( ws, sms, percentage, time, span )->
 
     trades.push trade unless trades.length is 0
 
+    # console.log 'a', trade.price, max, trade.price < max
+
     pct = ( ( trade.price - max ) / max )
 
     if pct <= percentage
 
-      console.log 'HIT!', pct, trade.price, max
-
       if lastNotification.isBefore( moment().subtract( time, span ) )
-        console.log 'NOTIFY!', pct, trade.price, max
+        console.log "NOTIFY! #{toPct( pct )}% within #{time} #{span}", trade.price, max
 
-        buyIt size: 0.04
+        maxPrice = max / 100.0
+
+        buyIt size: size
 
         lastNotification = moment()
         trades = []
@@ -131,7 +133,7 @@ module.exports = ( ws, sms, percentage, time, span )->
     min = Math.min.apply null, prices
     max = Math.max.apply null, prices
 
-    console.log 'SPREAD', toPct( difference( max, min ) ), acct.formatMoney( ( max - min ) / 100), acct.formatMoney( min / 100), acct.formatMoney( max / 100), trades.length
+    console.log 'SPREAD', "#{time} #{span}", toPct( percentage), toPct( difference( max, min ) ), acct.formatMoney( ( max - min ) / 100), acct.formatMoney( min / 100), acct.formatMoney( max / 100), trades.length
 
-  setInterval monitorStats, 60 * 1000
+  setInterval monitorStats, time * 60 * 1000
 

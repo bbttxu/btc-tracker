@@ -1,23 +1,52 @@
 R = require 'ramda'
 
-buys = (price, amount)->
+# Create a structure of BTC sell orders,
+# Returns an array of objects with price and size of limit order
+buys = (price, amount, limit)->
 
-  MIN = 3
-  MAX = 6
+  MIN = 1
+  MAX = 10
+
+  BTC_PLACES = 8
+
+  LOSS = price * 100.0 / 99.75
 
   start = Math.floor( price * 10 ) * 10
 
   spread = R.range MIN, MAX + 1
 
   computeSpread = (value)->
+    ( start / 100 ) + ( value ) + ( value / 100 )
+
+  beatTheBreak = (value)->
+    LOSS < value
+
+  notOverLimit = (value)->
+    value < limit
+
+  prices = R.filter beatTheBreak, R.filter notOverLimit, R.map computeSpread, spread
+
+  priceBuys = (value)->
     buyPrice = ( start / 100 ) + ( value ) + ( value / 100 )
     buyOrder =
-      size: ( amount / spread.length ).toFixed(8)
-      price: ( buyPrice ).toFixed(2)
+      size: ( amount / prices.length ).toFixed BTC_PLACES
+      price: value.toFixed(2)
 
-    buyOrder
+  buys = R.map priceBuys, prices
 
-  buys = R.map( computeSpread, spread)
+  downsample = (set)->
+    if set.length > 0
+      index = Math.floor( Math.random() * set.length )
+      maximum = set[index].price * set[index].size
+      minimum = price * set[index].size
+
+      average = ( maximum + minimum ) / 2
+
+      set[index].size = ( average / set[index].price ).toFixed BTC_PLACES
+
+    set
+
+  buys = downsample buys
 
   R.reverse R.sort( 'price', buys )
 
