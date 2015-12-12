@@ -15,7 +15,7 @@ module.exports = ( ws, sms, percentage, time, span )->
   toPct = ( decimal )->
     ( decimal * 100 ).toFixed(1) + '%'
 
-  lastNotification = moment().subtract( time, span )
+  lastNotification = moment().subtract( time, span ).add( 1, span )
   trades = []
 
   maxPrice = undefined
