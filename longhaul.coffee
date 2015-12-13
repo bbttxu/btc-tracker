@@ -23,7 +23,7 @@ cleanup = (spread, offset, size)->
       client_oid: uuid.v4()
       size: size
       cancel_after: 'day'
-      price: price
+      price: pricing.usd price
 
     first.push order.client_oid
 
@@ -79,7 +79,7 @@ cleanup = (spread, offset, size)->
         product_id: 'BTC-USD'
         client_oid: uuid.v4()
         size: size
-        price: ( 1.0025 * json.price ) + ( spread + ( 2 * offset ) )
+        price: pricing.usd ( 1.0025 * json.price ) + ( spread + ( 2 * offset ) )
         # cancel_after: 'day'
 
       second.push order.client_oid
