@@ -7,7 +7,7 @@ log = require './logger'
 
 USD_PLACES = 2
 
-cleanup = (spread, size, offset)->
+cleanup = (spread, offset, size)->
   trades = []
 
   openSells = []
