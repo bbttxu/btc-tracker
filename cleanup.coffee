@@ -9,9 +9,11 @@ USD_PLACES = 2
 
 cleanup = (spread, size, offset)->
   trades = []
+
+  openSells = []
   sells = []
+  openBuys = []
   buys = []
-  open = []
 
   initiateSell = (price)->
     order =
@@ -22,12 +24,12 @@ cleanup = (spread, size, offset)->
       price: price + offset
 
 
-    sells.push order.client_oid
+    openSells.push order.client_oid
 
     console.log order
     client.sell order, ( err, response )->
       data = JSON.parse response.body
-      log.log response.body
+      log.log data
       console.log 'sell', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
 
@@ -57,14 +59,20 @@ cleanup = (spread, size, offset)->
         trades = R.reject aboveThreshold, trades
 
   handleReceived = (json)->
-    if R.contains json.client_oid, sells
-      R.remove json.client_oid, sells
-      open.push json.order_id
+    if R.contains json.client_oid, openSells
+      R.remove json.client_oid, openSells
+      sells.push json.order_id
 
-  handleDone = (json)->
-    if R.contains json.order_id, open
+    if R.contains json.client_oid, openBuys
+      R.remove json.client_oid, openBuys
+      buys.push json.order_id
 
-      R.remove json.order_id, open
+
+  handleFilled = (json)->
+    if R.contains json.order_id, sells
+      R.remove json.order_id, sells
+      log.log json
+
       order =
         product_id: 'BTC-USD'
         client_oid: uuid.v4()
@@ -72,12 +80,26 @@ cleanup = (spread, size, offset)->
         price: json.price - ( spread + ( 2 * offset ) )
         cancel_after: 'day'
 
-      buys.push order.client_oid
+      openBuys.push order.client_oid
 
       client.buy order, ( err, response )->
         data = JSON.parse response.body
-        log.log response.body
+        log.log data
         console.log 'buy', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
+
+    if R.contains json.order_id, buys
+      R.remove json.order_id, buys
+      log.log json
+
+
+  handleCancelled = (json)->
+    if R.contains json.order_id, sells
+      R.remove json.order_id, sells
+      log.log json
+
+    if R.contains json.order_id, buys
+      R.remove json.order_id, buys
+      log.log json
 
 
   stream.on 'open', ->
@@ -88,6 +110,7 @@ cleanup = (spread, size, offset)->
 
     handleMatch json if json.type is 'match' and json.side is 'sell'
     handleReceived json if json.type is 'received'
-    handleDone json if json.type is 'done' and json.reason is 'filled'
+    handleFilled json if json.type is 'done' and json.reason is 'filled'
+    handleCancelled json if json.type is 'done' and json.reason is 'cancelled'
 
 module.exports = cleanup

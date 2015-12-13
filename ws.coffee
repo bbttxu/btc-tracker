@@ -13,4 +13,4 @@ require('dotenv').load()
 
 cleanup = require './cleanup'
 
-cleanup 1.00, .01, .5
+cleanup 1.00, .05, .5
