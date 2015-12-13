@@ -26,11 +26,11 @@ cleanup = (spread, offset, size)->
 
     openSells.push order.client_oid
 
-    console.log order
+    # console.log order
     client.sell order, ( err, response )->
       data = JSON.parse response.body
       log data
-      console.log 'sell', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
+      # console.log 'sell', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
 
   handleMatch = (data)->
@@ -85,7 +85,7 @@ cleanup = (spread, offset, size)->
       client.buy order, ( err, response )->
         data = JSON.parse response.body
         log data
-        console.log 'buy', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
+        # console.log 'buy', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
     if R.contains json.order_id, buys
       R.remove json.order_id, buys

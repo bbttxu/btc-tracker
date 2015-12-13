@@ -27,11 +27,11 @@ cleanup = (spread, offset, size)->
 
     first.push order.client_oid
 
-    console.log order
+    # console.log order
     client.buy order, ( err, response )->
       data = JSON.parse response.body
       log data
-      console.log 'buy order', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
+      # console.log 'buy order', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
 
   handleMatch = (data)->
@@ -55,7 +55,7 @@ cleanup = (spread, offset, size)->
 
       # We're moving down, so remove the values above top threshold
       if min is price
-        console.log 'down', price, diff
+        # console.log 'down', price, diff
         trades = []
         trades.push price: ( price - spread )
 
@@ -87,7 +87,7 @@ cleanup = (spread, offset, size)->
       client.sell order, ( err, response )->
         data = JSON.parse response.body
         log data
-        console.log 'buy', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
+        # console.log 'buy', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
     if R.contains json.order_id, openSells
       R.remove json.order_id, openSells
