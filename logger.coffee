@@ -8,4 +8,8 @@ winston.add winston.transports.Loggly,
   tags: [ 'Winston-NodeJS' ]
   json: true
 
-module.exports = winston
+logger = (data, level='info')->
+  winston.log level, data
+
+module.exports = logger
+
