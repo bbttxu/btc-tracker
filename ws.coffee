@@ -11,6 +11,3 @@ Stream.on 'open', ->
 
 Trip Stream, Notification, -0.009, 5, 'minutes', 0.09
 
-Trip Stream, Notification, -0.012, 30, 'minutes', 0.12
-
-Trip Stream, Notification, -0.02, 60, 'minutes', 0.2
