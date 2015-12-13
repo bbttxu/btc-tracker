@@ -13,4 +13,8 @@ require('dotenv').load()
 
 cleanup = require './cleanup'
 
-cleanup 1.00, .05, .5
+cleanup 1.0, 0.5, 0.01
+
+Longhaul = require './longhaul'
+
+Longhaul 1.0, 0.5, 0.01

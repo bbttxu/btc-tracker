@@ -29,7 +29,7 @@ cleanup = (spread, offset, size)->
     console.log order
     client.sell order, ( err, response )->
       data = JSON.parse response.body
-      log.log data
+      log data
       console.log 'sell', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
 
@@ -71,7 +71,7 @@ cleanup = (spread, offset, size)->
   handleFilled = (json)->
     if R.contains json.order_id, sells
       R.remove json.order_id, sells
-      log.log json
+      log json
 
       order =
         product_id: 'BTC-USD'
@@ -84,22 +84,22 @@ cleanup = (spread, offset, size)->
 
       client.buy order, ( err, response )->
         data = JSON.parse response.body
-        log.log data
+        log data
         console.log 'buy', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
     if R.contains json.order_id, buys
       R.remove json.order_id, buys
-      log.log json
+      log json
 
 
   handleCancelled = (json)->
     if R.contains json.order_id, sells
       R.remove json.order_id, sells
-      log.log json
+      log json
 
     if R.contains json.order_id, buys
       R.remove json.order_id, buys
-      log.log json
+      log json
 
 
   stream.on 'open', ->

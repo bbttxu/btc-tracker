@@ -4,9 +4,10 @@ CBE_FEE = 1.0025
 USD_PLACES = 2
 
 usd = (usd)->
-  ( usd ).toFixed USD_PLACES
+  ( parseFloat usd ).toFixed USD_PLACES
 
 module.exports =
+  usd: usd,
   reapBtc: (size, newPrice, oldPrice)->
     newSize  = ( size * oldPrice ) / ( newPrice * CBE_FEE )
 

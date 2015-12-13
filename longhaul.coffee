@@ -4,40 +4,41 @@ uuid = require 'uuid'
 stream = require './stream'
 client = require './client'
 log = require './logger'
+pricing = require './pricing'
 
 USD_PLACES = 2
 
 cleanup = (spread, offset, size)->
   trades = []
 
-  openSells = []
-  sells = []
+  first = []
+  second = []
   openBuys = []
+  openSells = []
   buys = []
 
-  initiateSell = (price)->
+  initiateOne = (price)->
     order =
       product_id: 'BTC-USD'
       client_oid: uuid.v4()
       size: size
-      cancel_after: 'hour'
-      price: price + offset
+      cancel_after: 'day'
+      price: price
 
-
-    openSells.push order.client_oid
+    first.push order.client_oid
 
     console.log order
-    client.sell order, ( err, response )->
+    client.buy order, ( err, response )->
       data = JSON.parse response.body
-      log.log data
-      console.log 'sell', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
+      log data
+      console.log 'buy order', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
 
   handleMatch = (data)->
-    trade = R.pick ['price', 'size', 'side', 'time'], data
+    trade = R.pick ['price', 'size'], data # , 'side', 'time'
+    trades.push trade
 
     price = parseFloat trade.price
-    trades.push trade
 
     prices = R.pluck ['price'], trades
     min = Math.min.apply null, prices
@@ -46,60 +47,61 @@ cleanup = (spread, offset, size)->
 
     if diff > spread
       if max is price
-        trades = []
-        trades.push price: (price + spread).toFixed USD_PLACES
-
-        initiateSell price
-
-      # We're moving down, so remove the values above top threshold
-      if min is price
         aboveThreshold = (val)->
-          val.price > ( price + spread )
+          val.price < ( price - spread )
 
         trades = R.reject aboveThreshold, trades
 
+
+      # We're moving down, so remove the values above top threshold
+      if min is price
+        console.log 'down', price, diff
+        trades = []
+        trades.push price: ( price - spread )
+
+        initiateOne ( price - offset ), diff
+
   handleReceived = (json)->
-    if R.contains json.client_oid, openSells
-      R.remove json.client_oid, openSells
-      sells.push json.order_id
+    if R.contains json.client_oid, first
+      R.remove json.client_oid, first
+      openBuys.push json.order_id
 
-    if R.contains json.client_oid, openBuys
-      R.remove json.client_oid, openBuys
-      buys.push json.order_id
-
+    if R.contains json.client_oid, second
+      R.remove json.client_oid, second
+      openSells.push json.order_id
 
   handleFilled = (json)->
-    if R.contains json.order_id, sells
-      R.remove json.order_id, sells
-      log.log json
+    if R.contains json.order_id, openBuys
+      R.remove json.order_id, openBuys
+      log json
 
       order =
         product_id: 'BTC-USD'
         client_oid: uuid.v4()
         size: size
-        price: json.price - ( spread + ( 2 * offset ) )
-        cancel_after: 'day'
+        price: ( 1.0025 * json.price ) + ( spread + ( 2 * offset ) )
+        # cancel_after: 'day'
 
-      openBuys.push order.client_oid
+      second.push order.client_oid
 
-      client.buy order, ( err, response )->
+      client.sell order, ( err, response )->
         data = JSON.parse response.body
-        log.log data
+        log data
         console.log 'buy', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
-    if R.contains json.order_id, buys
-      R.remove json.order_id, buys
-      log.log json
+    if R.contains json.order_id, openSells
+      R.remove json.order_id, openSells
+      log json
 
 
   handleCancelled = (json)->
-    if R.contains json.order_id, sells
-      R.remove json.order_id, sells
-      log.log json
+    if R.contains json.order_id, openBuys
+      R.remove json.order_id, openBuys
+      log json
 
-    if R.contains json.order_id, buys
-      R.remove json.order_id, buys
-      log.log json
+    if R.contains json.order_id, openSells
+      R.remove json.order_id, openSells
+      log json
 
 
   stream.on 'open', ->
@@ -111,6 +113,6 @@ cleanup = (spread, offset, size)->
     handleMatch json if json.type is 'match' and json.side is 'sell'
     handleReceived json if json.type is 'received'
     handleFilled json if json.type is 'done' and json.reason is 'filled'
-    handleCancelled json if json.type is 'done' and json.reason is 'cancelled'
+    # handleCancelled json if json.type is 'done' and json.reason is 'cancelled'
 
 module.exports = cleanup

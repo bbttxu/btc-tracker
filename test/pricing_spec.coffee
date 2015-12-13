@@ -3,6 +3,13 @@ should = require 'should'
 R = require 'ramda'
 
 describe "pricing", ->
+  it 'formats dollar to cents', ->
+    result = pricing.usd 1343.454
+    result.should.be.eql '1343.45'
+
+    result = pricing.usd '43.729123'
+    (result).should.be.eql '43.73'
+
   it "calculates increased btc order at lower dollar amount", ->
     result = pricing.reapBtc 1, 452.35, 454.35
 
