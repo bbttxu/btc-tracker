@@ -9,5 +9,5 @@ Stream = require './stream'
 Stream.on 'open', ->
   Stream.send JSON.stringify product_id: 'BTC-USD', type: 'subscribe'
 
-Trip Stream, Notification, -0.009, 5, 'minutes', 0.09
+Trip Stream, Notification, -0.01, 30, 'minutes', 0.1
 
