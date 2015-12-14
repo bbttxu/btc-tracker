@@ -18,11 +18,11 @@ cleanup = (spread, offset, size)->
   buys = []
 
 
-  isSell = (order)->
-    order.side is 'sell'
+  # isSell = (order)->
+  #   order.side is 'sell'
 
-  client.getOrders (data)->
-    openBuys = R.pluck('id') R.filter isSell, data
+  # client.getOrders (data)->
+  #   openBuys = R.pluck('id') R.filter isSell, data
 
 
   initiateOne = (price)->

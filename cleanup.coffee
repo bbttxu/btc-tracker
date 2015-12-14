@@ -3,7 +3,9 @@ uuid = require 'uuid'
 
 stream = require './stream'
 client = require './client'
+pricing = require './pricing'
 log = require './logger'
+
 
 USD_PLACES = 2
 
