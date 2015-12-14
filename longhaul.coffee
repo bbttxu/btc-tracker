@@ -17,6 +17,14 @@ cleanup = (spread, offset, size)->
   openSells = []
   buys = []
 
+
+  isSell = (order)->
+    order.side is 'sell'
+
+  client.getOrders (data)->
+    openBuys = R.pluck('id') R.filter isSell, data
+
+
   initiateOne = (price)->
     order =
       product_id: 'BTC-USD'

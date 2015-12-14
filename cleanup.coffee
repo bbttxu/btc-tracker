@@ -7,6 +7,13 @@ log = require './logger'
 
 USD_PLACES = 2
 
+# isBuy = (order)->
+#   order.side is 'buy'
+
+# client.getOrders (data)->
+#   openSells = R.pluck 'id', R.filter isBuy, data
+
+
 cleanup = (spread, offset, size)->
   trades = []
 
@@ -14,6 +21,8 @@ cleanup = (spread, offset, size)->
   sells = []
   openBuys = []
   buys = []
+
+
 
   initiateSell = (price)->
     order =
@@ -73,11 +82,13 @@ cleanup = (spread, offset, size)->
       R.remove json.order_id, sells
       log json
 
+      reap = pricing.reapBtc size, json.price - ( spread + ( 2 * offset ) ), json.price
+
       order =
         product_id: 'BTC-USD'
         client_oid: uuid.v4()
-        size: size
-        price: json.price - ( spread + ( 2 * offset ) )
+        size: reap.size
+        price: reap.price
         cancel_after: 'day'
 
       openBuys.push order.client_oid
