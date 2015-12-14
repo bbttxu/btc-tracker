@@ -2,18 +2,23 @@
 
 CBE_FEE = 1.0025
 USD_PLACES = 2
+BTC_PLACES = 8
 
 usd = (usd)->
   ( parseFloat usd ).toFixed USD_PLACES
 
+btc = (btc)->
+  ( parseFloat btc ).toFixed BTC_PLACES
+
 module.exports =
   usd: usd,
+  btc: btc,
   reapBtc: (size, newPrice, oldPrice)->
     newSize  = ( size * oldPrice ) / ( newPrice * CBE_FEE )
 
     order =
-      price: newPrice
-      size: newSize
+      price: usd newPrice
+      size: btc newSize
 
   buy:
     breakEven: (price)->
