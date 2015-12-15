@@ -1,13 +1,9 @@
 require('dotenv').load()
 
-Trip = require './trip'
+Cleanup = require './cleanup'
 
-Notification = require './notification'
+Cleanup 1.0, 0.25, 0.01
 
-Stream = require './stream'
+Longhaul = require './longhaul'
 
-Stream.on 'open', ->
-  Stream.send JSON.stringify product_id: 'BTC-USD', type: 'subscribe'
-
-Trip Stream, Notification, -0.009, 5, 'minutes', 0.09
-
+Longhaul 1.0, 0.25, 0.012

@@ -1,7 +1,7 @@
 {
   "name": "cbe",
   "mod-project-name": "btc-trader",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "description": "Use Coinbase Exchange websocket feed to trigger pricing change alerts",
   "main": "ws.coffee",
   "scripts": {
@@ -24,9 +24,9 @@
     "moment": "^2.10.6",
     "ramda": "^0.18.0",
     "uuid": "^2.0.1",
-    "ws": "^0.8.0"
-  },
-  "devDependencies": {
+    "winston": "^2.1.1",
+    "winston-loggly": "^1.2.0",
+    "ws": "^0.8.0",
     "mocha": "^2.3.4",
     "should": "^8.0.1"
   }
