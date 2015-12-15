@@ -30,9 +30,9 @@ cleanup = (spread, offset, size)->
     order =
       product_id: 'BTC-USD'
       client_oid: uuid.v4()
-      size: size
+      size: pricing.btc size
       cancel_after: 'hour'
-      price: price + offset
+      price: pricing.usd price + offset
 
 
     openSells.push order.client_oid

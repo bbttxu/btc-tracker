@@ -18,18 +18,19 @@ cleanup = (spread, offset, size)->
   buys = []
 
 
-  # isSell = (order)->
+  # isASell = (order)->
   #   order.side is 'sell'
 
-  # client.getOrders (data)->
-  #   openBuys = R.pluck('id') R.filter isSell, data
-
+  # client.getOrders (err, data)->
+  #   openBuys = R.pluck('id') R.filter isASell, data
+  #   console.log openBuys
+  #   openBuys
 
   initiateOne = (price)->
     order =
       product_id: 'BTC-USD'
       client_oid: uuid.v4()
-      size: size
+      size: pricing.btc size
       cancel_after: 'day'
       price: pricing.usd price
 
@@ -86,7 +87,7 @@ cleanup = (spread, offset, size)->
       order =
         product_id: 'BTC-USD'
         client_oid: uuid.v4()
-        size: size
+        size: pricing.btc size
         price: pricing.usd ( 1.0025 * json.price ) + ( spread + ( 2 * offset ) )
         # cancel_after: 'day'
 
