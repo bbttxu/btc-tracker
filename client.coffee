@@ -21,13 +21,13 @@ parcel = (options)->
   order
 
 sell = ( order, callback )->
-  client.sell parcel(order), callback
+  authedClient.sell parcel(order), callback
 
 buy = ( order, callback )->
-  client.buy parcel(order), callback
+  authedClient.buy parcel(order), callback
 
 getOrders = ( callback )->
-  client.getOrders callback
+  authedClient.getOrders callback
 
 module.exports =
   sell: sell
