@@ -1,5 +1,4 @@
 R = require 'ramda'
-uuid = require 'uuid'
 
 stream = require './stream'
 client = require './client'
@@ -16,7 +15,7 @@ sells = []
 isSell = (order)->
   order.side is 'sell'
 
-client.getOrders (err, response)->
+client.orders (err, response)->
   data = JSON.parse response.body
   sells = R.pluck 'id', R.filter isSell, data
   console.log sells
@@ -27,12 +26,9 @@ cleanup = (spread, offset, size)->
 
   initiateSell = (price)->
     order =
-      product_id: 'BTC-USD'
-      client_oid: uuid.v4()
-      size: pricing.btc size
+      size: size
       cancel_after: 'hour'
-      price: pricing.usd price + offset
-
+      price: price + offset
 
     openSells.push order.client_oid
 
@@ -86,8 +82,6 @@ cleanup = (spread, offset, size)->
       reap = pricing.reapBtc size, json.price - ( spread + ( 2 * offset ) ), json.price
 
       order =
-        product_id: 'BTC-USD'
-        client_oid: uuid.v4()
         size: reap.size
         price: reap.price
         cancel_after: 'day'
