@@ -7,7 +7,7 @@ pricing = require './pricing'
 
 authedClient = new CoinbaseExchange.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
 
-package = (options)->
+parcel = (options)->
   defaults = ->
     product_id: 'BTC-USD'
     client_oid: uuid.v4()
@@ -21,10 +21,10 @@ package = (options)->
   order
 
 sell = ( order, callback )->
-  client.sell package(order), callback
+  client.sell parcel(order), callback
 
 buy = ( order, callback )->
-  client.buy package(order), callback
+  client.buy parcel(order), callback
 
 getOrders = ( callback )->
   client.getOrders callback
