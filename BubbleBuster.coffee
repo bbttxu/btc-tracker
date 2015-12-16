@@ -9,22 +9,21 @@ log = require './logger'
 
 USD_PLACES = 2
 
-# isBuy = (order)->
-#   order.side is 'buy'
+openSells = []
+openBuys = []
+sells = []
 
-# client.getOrders (data)->
-#   openSells = R.pluck 'id', R.filter isBuy, data
+isSell = (order)->
+  order.side is 'sell'
 
+client.getOrders (err, response)->
+  data = JSON.parse response.body
+  sells = R.pluck 'id', R.filter isSell, data
+  console.log sells
 
 cleanup = (spread, offset, size)->
   trades = []
-
-  openSells = []
-  sells = []
-  openBuys = []
   buys = []
-
-
 
   initiateSell = (price)->
     order =
@@ -92,6 +91,7 @@ cleanup = (spread, offset, size)->
         size: reap.size
         price: reap.price
         cancel_after: 'day'
+        time_in_force: 'GTT'
 
       openBuys.push order.client_oid
 
