@@ -1,11 +1,11 @@
 {
   "name": "cbe",
   "mod-project-name": "btc-trader",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Use Coinbase Exchange websocket feed to trigger pricing change alerts",
   "main": "ws.coffee",
   "scripts": {
-    "start": "coffee ws.coffee",
+    "start": "coffee index.coffee",
     "logs": "modulus project logs tail -p 'btc-trader'",
     "test": "mocha",
     "dev": "mocha -w"
