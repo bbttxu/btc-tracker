@@ -36,6 +36,8 @@ cleanup = (spread, offset, size)->
 
     prices = R.uniq prices
 
+    # console.log prices
+
     price = parseFloat trade.price
 
     # current = R.pluck ['price'], prices
@@ -72,16 +74,18 @@ cleanup = (spread, offset, size)->
       R.remove json.order_id, openBuys
       log json
 
-      order =
-        size: size
-        price: ( 1.0025 * json.price ) + ( spread + ( 2 * offset ) )
-        # cancel_after: 'day'
+      # TODO investigate why this isn't defined sometimes
+      if json.price
+        order =
+          size: size
+          price: ( 1.0025 * json.price ) + ( spread + ( 2 * offset ) )
+          # cancel_after: 'day'
 
-      second.push order.client_oid
+        second.push order.client_oid
 
-      client.sell order, ( err, response )->
-        data = JSON.parse response.body
-        log data
+        client.sell order, ( err, response )->
+          data = JSON.parse response.body
+          log data
 
     if R.contains json.order_id, openSells
       R.remove json.order_id, openSells

@@ -12,12 +12,12 @@ openSells = []
 openBuys = []
 sells = []
 
-isSell = (order)->
-  order.side is 'sell'
+# isSell = (order)->
+#   order.side is 'sell'
 
-client.orders (err, response)->
-  data = JSON.parse response.body
-  sells = R.pluck 'id', R.filter isSell, data
+# client.orders (err, response)->
+#   data = JSON.parse response.body
+#   sells = R.pluck 'id', R.filter isSell, data
 
 cleanup = (spread, offset, size)->
   console.log "BubbleBuster", spread, offset, size
