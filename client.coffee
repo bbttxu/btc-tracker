@@ -8,13 +8,11 @@ pricing = require './pricing'
 authedClient = new CoinbaseExchange.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
 
 parcel = (options)->
-  defaults = ->
+  defaults =
     product_id: 'BTC-USD'
     client_oid: uuid.v4()
 
-  order = R.merge defaults, options
-
-  console.log order
+  order = R.mergeAll [ defaults, options ]
 
   # Ensure data is formatted properly
   order.price = pricing.usd order.price
@@ -31,7 +29,11 @@ buy = ( order, callback )->
 getOrders = ( callback )->
   authedClient.getOrders callback
 
+withdraw = ( withdrawl, callback )->
+  authedClient.withdraw withdrawl, callback
+
 module.exports =
   sell: sell
   buy: buy
   orders: getOrders
+  withdraw: withdraw

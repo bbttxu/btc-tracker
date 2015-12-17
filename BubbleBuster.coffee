@@ -49,6 +49,8 @@ cleanup = (spread, offset, size)->
 
     prices = R.uniq prices
 
+    console.log prices
+
     # current = R.pluck ['price'], prices
     min = Math.min.apply null, prices
     max = Math.max.apply null, prices
