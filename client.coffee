@@ -35,9 +35,8 @@ getOrders = ( callback )->
 withdraw = ( withdrawl, callback )->
   authedClient.withdraw withdrawl, callback
 
-
-
 module.exports =
+  getAccounts: getAccounts
   sell: sell
   buy: buy
   orders: getOrders

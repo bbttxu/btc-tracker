@@ -18,7 +18,6 @@ isSell = (order)->
 client.orders (err, response)->
   data = JSON.parse response.body
   sells = R.pluck 'id', R.filter isSell, data
-  console.log sells
 
 cleanup = (spread, offset, size)->
   console.log "BubbleBuster", spread, offset, size
@@ -34,11 +33,9 @@ cleanup = (spread, offset, size)->
 
     openSells.push order.client_oid
 
-    # console.log order
     client.sell order, ( err, response )->
       data = JSON.parse response.body
       log data
-      # console.log 'sell', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
 
   handleMatch = (data)->
@@ -48,8 +45,6 @@ cleanup = (spread, offset, size)->
     prices.push trade.price
 
     prices = R.uniq prices
-
-    console.log prices
 
     # current = R.pluck ['price'], prices
     min = Math.min.apply null, prices
@@ -98,7 +93,6 @@ cleanup = (spread, offset, size)->
       client.buy order, ( err, response )->
         data = JSON.parse response.body
         log data
-        # console.log 'buy', err, R.pick ['price', 'size', 'created_at', 'product_id'], data
 
     if R.contains json.order_id, buys
       R.remove json.order_id, buys
