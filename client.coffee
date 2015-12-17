@@ -20,6 +20,9 @@ parcel = (options)->
 
   order
 
+getAccounts = ( callback )->
+  authedClient.getAccounts callback
+
 sell = ( order, callback )->
   authedClient.sell parcel(order), callback
 
@@ -31,6 +34,8 @@ getOrders = ( callback )->
 
 withdraw = ( withdrawl, callback )->
   authedClient.withdraw withdrawl, callback
+
+
 
 module.exports =
   sell: sell
