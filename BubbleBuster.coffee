@@ -86,7 +86,7 @@ cleanup = (spread, offset, size)->
         size: reap.size
         price: reap.price
         cancel_after: 'day'
-        time_in_force: 'GTT'
+        # time_in_force: 'GTT'
 
       openBuys.push order.client_oid
 

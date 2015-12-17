@@ -1,4 +1,5 @@
 R = require 'ramda'
+td = require 'throttle-debounce'
 
 client = require './client'
 notification = require './notification'
@@ -30,4 +31,4 @@ recoup = ->
 
   client.getAccounts getYerTake
 
-module.exports = recoup
+module.exports = td.debounce 1000, recoup
