@@ -21,7 +21,9 @@ client.orders (err, response)->
   console.log sells
 
 cleanup = (spread, offset, size)->
-  trades = []
+  console.log "BubbleBuster", spread, offset, size
+
+  prices = []
   buys = []
 
   initiateSell = (price)->
@@ -43,26 +45,28 @@ cleanup = (spread, offset, size)->
     trade = R.pick ['price', 'size', 'side', 'time'], data
 
     price = parseFloat trade.price
-    trades.push trade
+    prices.push trade.price
 
-    prices = R.pluck ['price'], trades
+    prices = R.uniq prices
+
+    # current = R.pluck ['price'], prices
     min = Math.min.apply null, prices
     max = Math.max.apply null, prices
     diff = (max - min).toFixed USD_PLACES
 
     if diff > spread
       if max is price
-        trades = []
-        trades.push price: (price + spread).toFixed USD_PLACES
+        prices = []
+        prices.push (price + spread).toFixed USD_PLACES
 
         initiateSell price
 
       # We're moving down, so remove the values above top threshold
       if min is price
-        aboveThreshold = (val)->
-          val.price > ( price + spread )
+        aboveThreshold = (value)->
+          value > ( price + spread )
 
-        trades = R.reject aboveThreshold, trades
+        prices = R.reject aboveThreshold, prices
 
   handleReceived = (json)->
     if R.contains json.client_oid, openSells

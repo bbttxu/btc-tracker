@@ -7,7 +7,9 @@ log = require './logger'
 USD_PLACES = 2
 
 cleanup = (spread, offset, size)->
-  trades = []
+  console.log "LongHaul", spread, offset, size
+
+  prices = []
 
   first = []
   second = []
@@ -32,28 +34,32 @@ cleanup = (spread, offset, size)->
 
   handleMatch = (data)->
     trade = R.pick ['price', 'size'], data # , 'side', 'time'
-    trades.push trade
+    prices.push trade.price
+
+    prices = R.uniq prices
+
+    # console.log prices
 
     price = parseFloat trade.price
 
-    prices = R.pluck ['price'], trades
+    # current = R.pluck ['price'], prices
     min = Math.min.apply null, prices
     max = Math.max.apply null, prices
     diff = (max - min).toFixed USD_PLACES
 
     if diff > spread
       if max is price
-        aboveThreshold = (val)->
-          val.price < ( price - spread )
+        aboveThreshold = (value)->
+          value < ( price - spread )
 
-        trades = R.reject aboveThreshold, trades
+        prices = R.reject aboveThreshold, prices
 
 
       # We're moving down, so remove the values above top threshold
       if min is price
         # console.log 'down', price, diff
-        trades = []
-        trades.push price: ( price - spread )
+        prices = []
+        prices.push ( price - spread )
 
         initiateOne ( price - offset ), diff
 

@@ -14,6 +14,8 @@ parcel = (options)->
 
   order = R.merge defaults, options
 
+  console.log order
+
   # Ensure data is formatted properly
   order.price = pricing.usd order.price
   order.size = pricing.btc order.size
