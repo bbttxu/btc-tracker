@@ -6,6 +6,16 @@ log = require './logger'
 
 USD_PLACES = 2
 
+openBuys = []
+
+isABuy = (order)->
+  order.side is 'buy'
+
+client.orders (err, response)->
+  data = JSON.parse response.body
+  openBuys = R.pluck 'id', R.filter isABuy, data
+  console.log openBuys
+
 cleanup = (spread, offset, size)->
   console.log "LongHaul", spread, offset, size
 

@@ -12,7 +12,10 @@ describe "buys", ->
     (results.length).should.be.eql 0
 
   it "calculate incremented penny prices", ->
-    results = buys 456.78, 0.5, 467.89
+    results = buys 456.78, 0.02, 467.89
+
+    console.log results
+
     (R.pluck 'price', results).should.containEql '459.73'
     (R.pluck 'price', results).should.containEql '460.74'
 

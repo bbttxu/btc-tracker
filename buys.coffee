@@ -5,18 +5,23 @@ R = require 'ramda'
 buys = (price, amount, limit)->
 
   MIN = 1
-  MAX = 10
+  MAX = 20
 
   BTC_PLACES = 8
 
-  LOSS = price * 100.0 / 99.75
+  LOSS = price * 1.0025
 
   start = Math.floor( price * 10 ) * 10
 
   spread = R.range MIN, MAX + 1
 
+  isOdd = (n) ->
+    n % 2 is 1
+
+  spread = R.filter isOdd, spread
+
   computeSpread = (value)->
-    ( start / 100 ) + ( value ) + ( value / 100 )
+    LOSS * ( 1000 + value ) / 1000
 
   beatTheBreak = (value)->
     LOSS < value

@@ -78,9 +78,10 @@ cleanup = (spread, offset, size)->
   handleFilled = (json)->
     if R.contains json.order_id, sells
       R.remove json.order_id, sells
-      log json
+      # log json
+      console.log 'filled, in sells'
 
-      reap = pricing.reapBtc size, json.price - ( spread + ( 2 * offset ) ), json.price
+      reap = pricing.reapBtc size, json.price - ( 1.005 * ( spread + ( 2 * offset ) ) ), json.price
 
       order =
         size: reap.size
