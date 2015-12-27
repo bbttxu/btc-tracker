@@ -17,6 +17,7 @@ parcel = (options)->
   # Ensure data is formatted properly
   order.price = pricing.usd order.price
   order.size = pricing.btc order.size
+  order.size = 0.01 if order.size < 0.01
 
   order
 
@@ -35,9 +36,13 @@ getOrders = ( callback )->
 withdraw = ( withdrawl, callback )->
   authedClient.withdraw withdrawl, callback
 
+getProduct24HrStats = ( callback )->
+  authedClient.getProduct24HrStats callback
+
 module.exports =
   getAccounts: getAccounts
   sell: sell
   buy: buy
   orders: getOrders
   withdraw: withdraw
+  stats: getProduct24HrStats

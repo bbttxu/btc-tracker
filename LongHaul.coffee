@@ -3,6 +3,7 @@ R = require 'ramda'
 stream = require './stream'
 client = require './client'
 log = require './logger'
+buyCalcs = require './buys'
 
 USD_PLACES = 2
 
@@ -28,16 +29,25 @@ cleanup = (spread, offset, size)->
   buys = []
 
   initiateOne = (price)->
-    order =
-      size: size
-      cancel_after: 'day'
-      price: price
-
-    first.push order.client_oid
-
-    client.buy order, ( err, response )->
+    client.stats (err, response)->
       data = JSON.parse response.body
-      log data
+      console.log 'initiate', data
+
+      potentialBuys = buyCalcs price, size, data.high
+
+      console.log potentialBuys
+
+      if potentialBuys.length > 0
+        order =
+          size: size
+          cancel_after: 'day'
+          price: price
+
+        first.push order.client_oid
+
+        client.buy order, ( err, response )->
+          data = JSON.parse response.body
+          log data
 
 
   handleMatch = (data)->
@@ -86,16 +96,23 @@ cleanup = (spread, offset, size)->
 
       # TODO investigate why this isn't defined sometimes
       if json.price
-        order =
-          size: size
-          price: ( 1.0025 * json.price ) + ( spread + ( 2 * offset ) )
-          # cancel_after: 'day'
-
-        second.push order.client_oid
-
-        client.sell order, ( err, response )->
+        client.stats (err, response)->
           data = JSON.parse response.body
-          log data
+          console.log 'filled', data
+
+          # console.log 'sell'
+          potentialBuys = buyCalcs json.price, size, data.high
+          console.log 'filled sells'
+
+          makeSell = (order)->
+            # second.push order.client_oid
+
+            client.sell order, ( err, response )->
+              data = JSON.parse response.body
+              console.log 'filled sell', data
+              log data
+
+          R.forEach makeSell, potentialBuys
 
     if R.contains json.order_id, openSells
       R.remove json.order_id, openSells
