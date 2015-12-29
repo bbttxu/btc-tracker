@@ -3,7 +3,10 @@ R = require 'ramda'
 stream = require './stream'
 client = require './client'
 pricing = require './pricing'
-log = require './logger'
+logger = require './logger'
+
+log = (data)->
+  logger data, 'BubbleBuster'
 
 
 USD_PLACES = 2

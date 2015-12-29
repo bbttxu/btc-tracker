@@ -2,7 +2,11 @@ R = require 'ramda'
 
 stream = require './stream'
 client = require './client'
-log = require './logger'
+pricing = require './pricing'
+logger = require './logger'
+
+log = (data)->
+  logger data, 'LongHaul'
 
 USD_PLACES = 2
 
