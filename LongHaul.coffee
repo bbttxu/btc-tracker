@@ -88,7 +88,7 @@ cleanup = (spread, offset, size)->
       if json.price
         order =
           size: size
-          price: ( 1.0025 * json.price ) + ( spread + ( 2 * offset ) )
+          price: pricing.usd ( 1.0125 * json.price )
           # cancel_after: 'day'
 
         second.push order.client_oid

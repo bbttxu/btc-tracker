@@ -12,12 +12,6 @@ openSells = []
 openBuys = []
 sells = []
 
-# isSell = (order)->
-#   order.side is 'sell'
-
-# client.orders (err, response)->
-#   data = JSON.parse response.body
-#   sells = R.pluck 'id', R.filter isSell, data
 
 cleanup = (spread, offset, size)->
   console.log "BubbleBuster", spread, offset, size
@@ -54,7 +48,7 @@ cleanup = (spread, offset, size)->
     if diff > spread
       if max is price
         prices = []
-        prices.push (price + spread).toFixed USD_PLACES
+        prices.push pricing.usd (price + spread)
 
         initiateSell price
 
@@ -81,11 +75,11 @@ cleanup = (spread, offset, size)->
       # log json
       console.log 'filled, in sells'
 
-      reap = pricing.reapBtc size, json.price - ( 1.005 * ( spread + ( 2 * offset ) ) ), json.price
+      reap = pricing.reapBtc size, ( json.price / 1.0125 ), json.price
 
       order =
-        size: reap.size
-        price: reap.price
+        size: pricing.btc reap.size
+        price: pricing.usd reap.price
         cancel_after: 'day'
         # time_in_force: 'GTT'
 
@@ -93,7 +87,7 @@ cleanup = (spread, offset, size)->
 
       client.buy order, ( err, response )->
         data = JSON.parse response.body
-        log data
+        log 'client.buy order', data
 
     if R.contains json.order_id, buys
       R.remove json.order_id, buys
