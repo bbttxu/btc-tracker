@@ -20,3 +20,7 @@ describe "redistribute", ->
   it "finds average of existing BTC", ->
     result = redistribute.avgBTC data
     result.should.be.eql .0245129719
+
+  it "equally distributes sells", ->
+    result = redistribute.equal 423.75, 465.07, 245
+    result.should.be.eql .0245129719
