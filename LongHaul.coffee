@@ -20,8 +20,8 @@ client.orders (err, response)->
   openBuys = R.pluck 'id', R.filter isABuy, data
   console.log openBuys
 
-cleanup = (spread, offset, size)->
-  console.log "LongHaul", spread, offset, size
+cleanup = (spread, size)->
+  console.log "LongHaul", spread, size
 
   prices = []
 
@@ -37,10 +37,9 @@ cleanup = (spread, offset, size)->
       cancel_after: 'day'
       price: price
 
-    first.push order.client_oid
-
     client.buy order, ( err, response )->
       data = JSON.parse response.body
+      first.push order.client_oid
       log data
 
 
@@ -50,29 +49,20 @@ cleanup = (spread, offset, size)->
 
     prices = R.uniq prices
 
-    # console.log prices
-
     price = parseFloat trade.price
 
-    # current = R.pluck ['price'], prices
-    min = Math.min.apply null, prices
     max = Math.max.apply null, prices
-    diff = (max - min).toFixed USD_PLACES
 
-    if diff > spread
-      if max is price
-        aboveThreshold = (value)->
-          value < ( price - spread )
+    breakEven = pricing.buy.breakEven max, spread
 
-        prices = R.reject aboveThreshold, prices
+    # We're moving down, so remove the values above top threshold
+    if price <= breakEven
+      take = pricing.buy.take max, spread
 
+      prices = []
+      prices.push price
 
-      # We're moving down, so remove the values above top threshold
-      if min is price
-        prices = []
-        prices.push ( price - spread )
-
-        initiateOne ( price - offset ), diff
+      initiateOne take
 
   handleReceived = (json)->
     if R.contains json.client_oid, first
@@ -92,13 +82,13 @@ cleanup = (spread, offset, size)->
       if json.price
         order =
           size: size
-          price: pricing.usd ( 1.0125 * json.price )
+          price: pricing.buy.take json.price, spread
           # cancel_after: 'day'
 
-        second.push order.client_oid
 
         client.sell order, ( err, response )->
           data = JSON.parse response.body
+          second.push data.client_oid
           log data
 
     if R.contains json.order_id, openSells
@@ -122,7 +112,7 @@ cleanup = (spread, offset, size)->
   stream.on 'message', (data, flags) ->
     json = JSON.parse data
 
-    handleMatch json if json.type is 'match' and json.side is 'sell'
+    handleMatch json if json.type is 'match' and json.side is 'buy'
     handleReceived json if json.type is 'received'
     handleFilled json if json.type is 'done' and json.reason is 'filled'
     # handleCancelled json if json.type is 'done' and json.reason is 'cancelled'
