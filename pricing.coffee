@@ -28,3 +28,7 @@ module.exports =
     take: (price, percentage)->
       # newPrice * CBE_FEE * percentage = price
       usd price / ( CBE_FEE * percentage )
+
+    make: (price, percentage)->
+      # newPrice * CBE_FEE * percentage = price
+      usd price * ( CBE_FEE * percentage )
