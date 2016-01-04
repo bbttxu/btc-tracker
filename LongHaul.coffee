@@ -6,6 +6,7 @@ pricing = require './pricing'
 logger = require './logger'
 
 log = (data)->
+  console.log 'LongHaul', data
   logger data, 'LongHaul'
 
 USD_PLACES = 2
@@ -36,6 +37,8 @@ cleanup = (spread, size)->
       size: size
       cancel_after: 'day'
       price: price
+
+    console.log 'take', price, order
 
     client.buy order, ( err, response )->
       data = JSON.parse response.body
@@ -80,10 +83,14 @@ cleanup = (spread, size)->
 
       # TODO investigate why this isn't defined sometimes
       if json.price
+
+        makePrice = pricing.buy.make json.price, spread
+
         order =
           size: size
-          price: pricing.buy.take json.price, spread
+          price: makePrice
           # cancel_after: 'day'
+        console.log json.price, order
 
 
         client.sell order, ( err, response )->
