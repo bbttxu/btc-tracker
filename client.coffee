@@ -1,5 +1,4 @@
 require('dotenv').load()
-uuid = require 'uuid'
 R = require 'ramda'
 CoinbaseExchange = require 'coinbase-exchange'
 
@@ -10,7 +9,6 @@ authedClient = new CoinbaseExchange.AuthenticatedClient(process.env.API_KEY, pro
 parcel = (options)->
   defaults =
     product_id: 'BTC-USD'
-    client_oid: uuid.v4()
 
   order = R.mergeAll [ defaults, options ]
 
@@ -35,9 +33,13 @@ getOrders = ( callback )->
 withdraw = ( withdrawl, callback )->
   authedClient.withdraw withdrawl, callback
 
+cancelOrder = ( order, callback )->
+  authedClient.cancelOrder order, callback
+
 module.exports =
   getAccounts: getAccounts
   sell: sell
   buy: buy
   orders: getOrders
   withdraw: withdraw
+  cancelOrder: cancelOrder

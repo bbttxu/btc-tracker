@@ -1,4 +1,5 @@
 R = require 'ramda'
+uuid = require 'uuid'
 
 stream = require './stream'
 client = require './client'
@@ -9,22 +10,11 @@ log = (data)->
   console.log 'LongHaul', data
   logger data, 'LongHaul'
 
-USD_PLACES = 2
-
-openBuys = []
-
-isABuy = (order)->
-  order.side is 'buy'
-
-client.orders (err, response)->
-  data = JSON.parse response.body
-  openBuys = R.pluck 'id', R.filter isABuy, data
-  console.log openBuys
-
 cleanup = (spread, size)->
   console.log "LongHaul", spread, size
 
   prices = []
+  openBuys = []
 
   first = []
   second = []
@@ -37,12 +27,15 @@ cleanup = (spread, size)->
       size: size
       cancel_after: 'day'
       price: price
+      client_oid: uuid.v4()
 
     console.log 'take', price, order
 
+    first.push .client_oid
+
     client.buy order, ( err, response )->
       data = JSON.parse response.body
-      first.push order.client_oid
+      console.log 'after buy', data
       log data
 
 
@@ -56,21 +49,26 @@ cleanup = (spread, size)->
 
     max = Math.max.apply null, prices
 
-    breakEven = pricing.buy.breakEven max, spread
+
+    take = pricing.buy.take max, spread
+
+    console.log spread, 'take', take, 'price', price, 'max', max
 
     # We're moving down, so remove the values above top threshold
-    if price <= breakEven
-      take = pricing.buy.take max, spread
+    if price <= take
+      takeEven = pricing.buy.takeEven max, spread
 
       prices = []
       prices.push price
+      console.log prices, prices.length
 
-      initiateOne take
+      initiateOne takeEven
 
   handleReceived = (json)->
     if R.contains json.client_oid, first
       R.remove json.client_oid, first
       openBuys.push json.order_id
+      console.log 'openBuys', openBuys
 
     if R.contains json.client_oid, second
       R.remove json.client_oid, second
@@ -89,13 +87,15 @@ cleanup = (spread, size)->
         order =
           size: size
           price: makePrice
+          client_oid: uuid.v4()
+
           # cancel_after: 'day'
         console.log json.price, order
+        second.push order.client_oid
 
 
         client.sell order, ( err, response )->
           data = JSON.parse response.body
-          second.push data.client_oid
           log data
 
     if R.contains json.order_id, openSells

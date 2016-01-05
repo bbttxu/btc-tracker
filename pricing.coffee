@@ -4,11 +4,14 @@ CBE_FEE = 1.0025
 USD_PLACES = 2
 BTC_PLACES = 8
 
+fix = (places, value)->
+  ( parseFloat value ).toFixed places
+
 usd = (usd)->
-  ( parseFloat usd ).toFixed USD_PLACES
+  fix USD_PLACES, usd
 
 btc = (btc)->
-  ( parseFloat btc ).toFixed BTC_PLACES
+  fix BTC_PLACES, btc
 
 module.exports =
   usd: usd,
@@ -27,6 +30,9 @@ module.exports =
 
     take: (price, percentage)->
       # newPrice * CBE_FEE * percentage = price
+      usd price / percentage
+
+    takeEven: (price, percentage)->
       usd price / ( CBE_FEE * percentage )
 
     make: (price, percentage)->
