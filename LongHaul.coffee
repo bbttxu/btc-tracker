@@ -31,7 +31,7 @@ cleanup = (spread, size)->
 
     console.log 'take', price, order
 
-    first.push .client_oid
+    first.push order.client_oid
 
     client.buy order, ( err, response )->
       data = JSON.parse response.body
@@ -52,7 +52,7 @@ cleanup = (spread, size)->
 
     take = pricing.buy.take max, spread
 
-    console.log spread, 'take', take, 'price', price, 'max', max
+    # console.log spread, 'take', take, 'price', price, 'max', max
 
     # We're moving down, so remove the values above top threshold
     if price <= take
@@ -90,12 +90,13 @@ cleanup = (spread, size)->
           client_oid: uuid.v4()
 
           # cancel_after: 'day'
-        console.log json.price, order
+        console.log 'before sell', json.price, order
         second.push order.client_oid
 
 
         client.sell order, ( err, response )->
           data = JSON.parse response.body
+          console.log 'after sell', data
           log data
 
     if R.contains json.order_id, openSells
