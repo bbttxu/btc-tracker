@@ -6,12 +6,15 @@ client = require './client'
 pricing = require './pricing'
 logger = require './logger'
 
-log = (data)->
-  console.log 'LongHaul', data
-  logger data, 'LongHaul'
 
 cleanup = (spread, size)->
-  console.log "LongHaul", spread, size
+  tag = "LongHaul-#{spread}-#{size}"
+
+  console.log "LongHaul", spread, size, tag
+
+  log = (data)->
+    console.log tag, data
+    logger data, tag
 
   prices = []
   openBuys = []
@@ -29,13 +32,13 @@ cleanup = (spread, size)->
       price: price
       client_oid: uuid.v4()
 
-    console.log 'take', price, order
+    console.log 'initiateOne', price, order
 
     first.push order.client_oid
 
     client.buy order, ( err, response )->
       data = JSON.parse response.body
-      console.log 'after buy', data
+      console.log 'initiateOne after buy', data
       log data
 
 
@@ -49,10 +52,9 @@ cleanup = (spread, size)->
 
     max = Math.max.apply null, prices
 
-
     take = pricing.buy.take max, spread
 
-    # console.log spread, 'take', take, 'price', price, 'max', max
+    # console.log tag, 'take', take, 'price', price, 'max', max
 
     # We're moving down, so remove the values above top threshold
     if price <= take
@@ -60,7 +62,7 @@ cleanup = (spread, size)->
 
       prices = []
       prices.push price
-      console.log prices, prices.length
+    #   console.log prices, prices.length
 
       initiateOne takeEven
 
@@ -68,7 +70,7 @@ cleanup = (spread, size)->
     if R.contains json.client_oid, first
       R.remove json.client_oid, first
       openBuys.push json.order_id
-      console.log 'openBuys', openBuys
+    #   console.log 'openBuys', openBuys
 
     if R.contains json.client_oid, second
       R.remove json.client_oid, second
@@ -90,13 +92,13 @@ cleanup = (spread, size)->
           client_oid: uuid.v4()
 
           # cancel_after: 'day'
-        console.log 'before sell', json.price, order
+        console.log 'handleFilled sell order', json.price, order
         second.push order.client_oid
 
 
         client.sell order, ( err, response )->
           data = JSON.parse response.body
-          console.log 'after sell', data
+          console.log 'handleFilled after sell', data
           log data
 
     if R.contains json.order_id, openSells
