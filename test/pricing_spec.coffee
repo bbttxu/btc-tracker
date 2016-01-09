@@ -27,3 +27,20 @@ describe "pricing buys", ->
 
     result = pricing.buy.take '467.29', '1.05'
     (result).should.be.eql '443.93'
+
+  it "calculates price removes buy percentage take", ->
+    result = pricing.buy.take '423.17', 1 / 1.0025
+    (result).should.be.eql '423.17'
+
+    result = pricing.buy.take '423.17', 1
+    (result).should.be.eql '422.11'
+
+    result = pricing.buy.take '423.17', 1.0025
+    (result).should.be.eql '421.06'
+
+    result = pricing.buy.take '423.17', 1.005
+    (result).should.be.eql '420.01'
+
+  it "pricing buy make gets make price off of buy", ->
+    result = pricing.buy.make '420.01', 1.005
+    (result).should.be.eql '423.17'

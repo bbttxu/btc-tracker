@@ -1,29 +1,23 @@
 R = require 'ramda'
+uuid = require 'uuid'
 
 stream = require './stream'
 client = require './client'
 pricing = require './pricing'
 logger = require './logger'
 
-log = (data)->
-  logger data, 'LongHaul'
 
-USD_PLACES = 2
+cleanup = (spread, size)->
+  tag = "LongHaul-#{spread}-#{size}"
 
-openBuys = []
+  console.log "LongHaul", spread, size, tag
 
-isABuy = (order)->
-  order.side is 'buy'
-
-client.orders (err, response)->
-  data = JSON.parse response.body
-  openBuys = R.pluck 'id', R.filter isABuy, data
-  console.log openBuys
-
-cleanup = (spread, offset, size)->
-  console.log "LongHaul", spread, offset, size
+  log = (data)->
+    console.log tag, data
+    logger data, tag
 
   prices = []
+  openBuys = []
 
   first = []
   second = []
@@ -36,6 +30,7 @@ cleanup = (spread, offset, size)->
       size: size
       cancel_after: 'day'
       price: price
+      client_oid: uuid.v4()
 
     first.push order.client_oid
 
@@ -50,29 +45,20 @@ cleanup = (spread, offset, size)->
 
     prices = R.uniq prices
 
-    # console.log prices
-
     price = parseFloat trade.price
 
-    # current = R.pluck ['price'], prices
-    min = Math.min.apply null, prices
     max = Math.max.apply null, prices
-    diff = (max - min).toFixed USD_PLACES
 
-    if diff > spread
-      if max is price
-        aboveThreshold = (value)->
-          value < ( price - spread )
+    take = pricing.buy.take max, spread
 
-        prices = R.reject aboveThreshold, prices
+    # We're moving down, so remove the values above top threshold
+    if price <= take
+      takeEven = pricing.buy.takeEven max, spread
 
+      prices = []
+      prices.push price
 
-      # We're moving down, so remove the values above top threshold
-      if min is price
-        prices = []
-        prices.push ( price - spread )
-
-        initiateOne ( price - offset ), diff
+      initiateOne takeEven
 
   handleReceived = (json)->
     if R.contains json.client_oid, first
@@ -90,9 +76,13 @@ cleanup = (spread, offset, size)->
 
       # TODO investigate why this isn't defined sometimes
       if json.price
+
+        makePrice = pricing.buy.make json.price, spread
+
         order =
           size: size
-          price: pricing.usd ( 1.0125 * json.price )
+          price: makePrice
+          client_oid: uuid.v4()
           # cancel_after: 'day'
 
         second.push order.client_oid
@@ -122,7 +112,7 @@ cleanup = (spread, offset, size)->
   stream.on 'message', (data, flags) ->
     json = JSON.parse data
 
-    handleMatch json if json.type is 'match' and json.side is 'sell'
+    handleMatch json if json.type is 'match' and json.side is 'buy'
     handleReceived json if json.type is 'received'
     handleFilled json if json.type is 'done' and json.reason is 'filled'
     # handleCancelled json if json.type is 'done' and json.reason is 'cancelled'
