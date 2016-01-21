@@ -37,6 +37,7 @@ cleanup = (spread, size)->
     client.buy order, ( err, response )->
       data = JSON.parse response.body
       log data
+      # console.log 'first', first
 
 
   handleMatch = (data)->
@@ -64,6 +65,7 @@ cleanup = (spread, size)->
     if R.contains json.client_oid, first
       R.remove json.client_oid, first
       openBuys.push json.order_id
+      # console.log 'openBuys', openBuys
 
     if R.contains json.client_oid, second
       R.remove json.client_oid, second
@@ -72,6 +74,7 @@ cleanup = (spread, size)->
   handleFilled = (json)->
     if R.contains json.order_id, openBuys
       R.remove json.order_id, openBuys
+      # console.log 'filled'
       log json
 
       # TODO investigate why this isn't defined sometimes
