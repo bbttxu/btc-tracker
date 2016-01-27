@@ -27,8 +27,6 @@
     "should": "^8.0.1",
     "throttle-debounce": "^0.1.1",
     "uuid": "^2.0.1",
-    "winston": "^2.1.1",
-    "winston-loggly": "^1.2.0",
     "ws": "^0.8.0"
   }
 }
