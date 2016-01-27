@@ -1,6 +1,6 @@
 {
   "name": "cbe",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "dependencies": {
     "accounting": {
       "version": "0.4.1",
