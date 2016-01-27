@@ -8,13 +8,10 @@ logger = require './logger'
 
 
 cleanup = (spread, size)->
-  tag = "LongHaul-#{spread}-#{size}"
-
-  console.log "LongHaul", spread, size, tag
-
   log = (data)->
-    console.log tag, data
-    logger data, tag
+    logger data, "LongHaul-#{spread}-#{size}"
+
+  log 'start'
 
   prices = []
   openBuys = []
