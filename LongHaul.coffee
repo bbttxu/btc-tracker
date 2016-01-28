@@ -6,15 +6,14 @@ client = require './client'
 pricing = require './pricing'
 logger = require './logger'
 
-
 cleanup = (spread, size)->
-  tag = "LongHaul-#{spread}-#{size}"
-
-  console.log "LongHaul", spread, size, tag
-
   log = (data)->
-    console.log tag, data
-    logger data, tag
+    logger data, "LongHaul-#{spread}-#{size}"
+
+  logOrder = (data)->
+    log JSON.stringify R.pick ['id','size','price', 'side', 'message', 'type', 'reason', 'fee'], data
+
+  log 'starting...'
 
   prices = []
   openBuys = []
@@ -36,7 +35,7 @@ cleanup = (spread, size)->
 
     client.buy order, ( err, response )->
       data = JSON.parse response.body
-      log data
+      logOrder data
       # console.log 'first', first
 
 
@@ -74,8 +73,8 @@ cleanup = (spread, size)->
   handleFilled = (json)->
     if R.contains json.order_id, openBuys
       R.remove json.order_id, openBuys
-      # console.log 'filled'
-      log json
+      logOrder json
+
 
       # TODO investigate why this isn't defined sometimes
       if json.price
@@ -92,21 +91,21 @@ cleanup = (spread, size)->
 
         client.sell order, ( err, response )->
           data = JSON.parse response.body
-          log data
+          logOrder data
 
     if R.contains json.order_id, openSells
       R.remove json.order_id, openSells
-      log json
+      logOrder json
 
 
   handleCancelled = (json)->
     if R.contains json.order_id, openBuys
       R.remove json.order_id, openBuys
-      log json
+      logOrder json
 
     if R.contains json.order_id, openSells
       R.remove json.order_id, openSells
-      log json
+      logOrder json
 
 
   stream.on 'open', ->
