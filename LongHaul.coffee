@@ -11,7 +11,7 @@ cleanup = (spread, size)->
     logger data, "LongHaul-#{spread}-#{size}"
 
   logOrder = (data)->
-    log JSON.stringify R.pick ['id','size','price', 'side', 'message', 'type', 'reason'], data
+    log JSON.stringify R.pick ['id','size','price', 'side', 'message', 'type', 'reason', 'fee'], data
 
   log 'starting...'
 
@@ -73,9 +73,6 @@ cleanup = (spread, size)->
   handleFilled = (json)->
     if R.contains json.order_id, openBuys
       R.remove json.order_id, openBuys
-
-      # We don't receive size (only `remaining_size`, usually zero at these sizes), so assume the price it was bought at?
-      console.log 'buy', ( parseFloat(json.price) * parseFloat(size) * -1 ), json.price * size * -1
       logOrder json
 
 
@@ -98,9 +95,6 @@ cleanup = (spread, size)->
 
     if R.contains json.order_id, openSells
       R.remove json.order_id, openSells
-
-      # We don't receive size (only `remaining_size`, usually zero at these sizes), so assume the price it was bought at?
-      console.log 'sell', parseFloat(json.price) * parseFloat(size)
       logOrder json
 
 
