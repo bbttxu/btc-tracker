@@ -5,15 +5,22 @@ stream = require './stream'
 client = require './client'
 pricing = require './pricing'
 logger = require './logger'
+running = require './running'
 
 cleanup = (spread, size)->
+
+  # Log events to the console as they happen
   log = (data)->
     logger data, "LongHaul-#{spread}-#{size}"
 
+  # Show information specific to an order in a variety of states
   logOrder = (data)->
     log JSON.stringify R.pick ['id','size','price', 'side', 'message', 'type', 'reason', 'fee'], data
 
   log 'starting...'
+
+  # Log running totals, using the logging function already created
+  logRunning = running log, size
 
   prices = []
   openBuys = []
@@ -36,7 +43,6 @@ cleanup = (spread, size)->
     client.buy order, ( err, response )->
       data = JSON.parse response.body
       logOrder data
-      # console.log 'first', first
 
 
   handleMatch = (data)->
@@ -64,7 +70,6 @@ cleanup = (spread, size)->
     if R.contains json.client_oid, first
       R.remove json.client_oid, first
       openBuys.push json.order_id
-      # console.log 'openBuys', openBuys
 
     if R.contains json.client_oid, second
       R.remove json.client_oid, second
@@ -74,7 +79,7 @@ cleanup = (spread, size)->
     if R.contains json.order_id, openBuys
       R.remove json.order_id, openBuys
       logOrder json
-
+      logRunning json
 
       # TODO investigate why this isn't defined sometimes
       if json.price
@@ -96,6 +101,7 @@ cleanup = (spread, size)->
     if R.contains json.order_id, openSells
       R.remove json.order_id, openSells
       logOrder json
+      logRunning json
 
 
   handleCancelled = (json)->
