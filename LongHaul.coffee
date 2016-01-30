@@ -6,6 +6,7 @@ client = require './client'
 pricing = require './pricing'
 logger = require './logger'
 running = require './running'
+orderBook = require './orderBook'
 
 cleanup = (spread, size)->
 
@@ -28,7 +29,12 @@ cleanup = (spread, size)->
   first = []
   second = []
   openBuys = []
+
+  # Open Sells, pull data from current order book
   openSells = []
+  orderBook.sells (data)->
+    openSells = R.pluck('id') data
+
   buys = []
 
   initiateOne = (price)->

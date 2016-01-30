@@ -12,7 +12,7 @@ running = (callback, size)->
 
     runningAmounts.push amount
 
-    callback amount: amount, total: acct.format R.sum runningAmounts
+    callback amount: acct.formatMoney(amount), total: acct.formatMoney(R.sum runningAmounts)
 
 
 module.exports = running
