@@ -23,4 +23,4 @@ clear = ->
 
   setInterval clearStale, 1000 * 60 * 15
 
-module.exports = clearStale
+module.exports = clear
