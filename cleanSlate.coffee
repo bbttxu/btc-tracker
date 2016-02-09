@@ -10,8 +10,6 @@ cancelOrder = (order) ->
     console.log 'cancel', order, response.body
 
 clearStale = (amount = 6, span = 'hours')->
-  console.log 'clearStale'
-
   isExpired = (order) ->
     moment(order.created_at).isBefore moment().subtract(amount, span)
 
