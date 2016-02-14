@@ -9,12 +9,15 @@ cancelOrder = (order) ->
   client.cancelOrder order, (err, response) ->
     console.log 'cancel', order, response.body
 
-clearStale = (amount = 3)->
+clearStale = (size, amount = 1)->
   byPrice = (a, b)->
     a.price > b.price
 
+  isRightSize = (a)->
+    a.price is size
+
   client.orders (err, response) ->
-    R.map cancelOrder, (R.pluck 'id', R.dropLast amount, (R.sort byPrice, R.filter(isABuy, JSON.parse(response.body))))
+    R.map cancelOrder, (R.pluck 'id', R.dropLast amount, (R.sort byPrice, R.filter(isRightSize, R.filter(isABuy, JSON.parse(response.body)))))
 
 clear = ->
   client.orders (err, response) ->
