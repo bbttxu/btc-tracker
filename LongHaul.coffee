@@ -54,7 +54,7 @@ cleanup = (spread, size, backlog = 1)->
       data = JSON.parse response.body
       logOrder data
 
-      cleanSlate.stale price, backlog
+      cleanSlate.stale size, backlog
 
 
   handleMatch = (data)->

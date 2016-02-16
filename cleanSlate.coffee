@@ -1,6 +1,8 @@
-R = require('ramda')
-moment = require('moment')
-client = require('./client')
+R = require 'ramda'
+moment = require 'moment'
+
+client = require './client'
+pricing = require './pricing'
 
 isABuy = (order) ->
   order.side == 'buy'
@@ -14,10 +16,12 @@ clearStale = (size, amount = 1)->
     a.price > b.price
 
   isRightSize = (a)->
-    a.price is size
+    pricing.btc(size) is a.size
 
   client.orders (err, response) ->
-    R.map cancelOrder, (R.pluck 'id', R.dropLast amount, (R.sort byPrice, R.filter(isRightSize, R.filter(isABuy, JSON.parse(response.body)))))
+    ordersBySize = R.sort byPrice, R.filter(isRightSize, R.filter(isABuy, JSON.parse(response.body)))
+    allButTheLast = R.dropLast amount, ordersBySize
+    R.map cancelOrder, R.pluck 'id', allButTheLast
 
 clear = ->
   client.orders (err, response) ->
