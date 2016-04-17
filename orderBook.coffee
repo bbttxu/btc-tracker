@@ -84,6 +84,28 @@ sellStructure = (callback)->
 
     callback R.reduce( round, {}, (R.map (R.pick ['price', 'size']), response) )
 
+priceAtDollarAmount = (callback)->
+  sells (response)->
+    # console.log JSON.stringify response
+
+    round = (acc,val)->
+      price = Math.round val.price
+      size = parseFloat val.size
+      # console.log price
+
+      usd = size * price
+
+      if acc[price]
+        acc[price] = acc[price] + usd
+
+      unless acc[price]
+        acc[price] = usd
+
+      # console.log acc
+      acc
+
+    callback R.reduce( round, {}, (R.map (R.pick ['price', 'size']), response) )
+
 
 # buyBalance console.log
 # sellBalance console.log
@@ -95,3 +117,4 @@ module.exports =
   sells: sells
   sellBalance: sellBalance
   sellStructure: sellStructure
+  priceAtDollarAmount: priceAtDollarAmount

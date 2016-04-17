@@ -12,9 +12,14 @@ acct = require 'accounting'
 
 stream = require './stream'
 client = require './client'
+pricing = require './pricing'
 
-isUSD = (account)->
-  account.currency is 'USD'
+matchCurrency = (currency)->
+  (account)->
+    account.currency is currency
+
+isUSD = matchCurrency 'USD'
+isBTC = matchCurrency 'BTC'
 
 
 fixedInvestment = (investment, reserve, payout)->
@@ -23,33 +28,69 @@ fixedInvestment = (investment, reserve, payout)->
   prices = {}
   updatePrices = (data)->
     prices = R.merge prices, data
-    console.log prices
+    # console.log prices
 
 
   update = ->
     console.log 'update'
     assess = (err, response)->
       data = JSON.parse response.body
-      console.log data
+      # console.log data
 
-      usd = (R.filter isUSD, data)[0]
-      console.log usd
+      btc = (R.filter isBTC, data)[0]
+      # console.log btc
 
-      if usd.balance < investment
-        if prices.buy
-          gap = investment - usd.balance
-          console.log "We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buy)}"
 
-      if usd.balance > investment
-        gap = usd.balance - investment
-        console.log "We'd want to sell #{acct.formatMoney(gap)} worth of BTC"
+
+      sell = btc.available * prices.sellBid
+      buy = btc.available * prices.buyBid
+
+      sellBTC = ( sell - investment ) / prices.sellBid
+      buyBTC = ( investment - buy ) / prices.buyBid
+
+      bids = []
+
+      sellOrder =
+        side: 'sell'
+        size: pricing.btc sellBTC
+        price: pricing.usd prices.sellBid
+
+      bids.push sellOrder if prices.sellBid
+
+      buyOrder =
+        side: 'buy'
+        size: pricing.btc(buyBTC)
+        price: pricing.usd prices.buyBid
+
+      bids.push buyOrder if prices.buyBid
+
+      console.log 'bids', bids
+
+      positiveBid = (bid)->
+        parseFloat(bid.size) > 0
+
+      insufficientFunds = (bid)->
+        parseFloat(bid.size) < 0.01
+
+      console.log 'valid', R.reject insufficientFunds, R.filter positiveBid, bids
+
+
+
+      # if btc.available < investment
+      #   if prices.buy
+      #     gap = investment - btc.available
+      #     console.log "We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buy)}"
+
+      # if btc.available > investment
+      #   gap = btc.available - investment
+      #   console.log "We'd want to sell #{acct.formatMoney(gap)} worth of BTC"
 
 
     client.getAccounts assess
 
 
   update()
-  setInterval update, 1000 * 60
+  setInterval update, 1000 * 6
 
 
   stream.on 'open', ->
@@ -58,8 +99,13 @@ fixedInvestment = (investment, reserve, payout)->
   stream.on 'message', (data, flags) ->
     json = JSON.parse data
     if json.type is 'match'
+      offset = 0.05
+      offset = offset * -1 if json.side is 'buy'
+      price = parseFloat json.price
+      bidPrice = price + offset
       obj = {}
-      obj[json.side] = json.price
+      obj[json.side] = price
+      obj[json.side + 'Bid'] = bidPrice
       updatePrices obj
 
 
