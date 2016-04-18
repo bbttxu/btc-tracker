@@ -10,6 +10,7 @@ R = require 'ramda'
 RSVP = require 'rsvp'
 # td = require 'throttle-debounce'
 acct = require 'accounting'
+moment = require 'moment'
 
 stream = require './stream'
 client = require './lib/coinbase-client'
@@ -25,7 +26,7 @@ isBTC = matchCurrency 'BTC'
 
 
 fixedInvestment = (investment, reserve, payout)->
-  console.log "Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
+  console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
 
   offset = 0.1
@@ -56,7 +57,7 @@ fixedInvestment = (investment, reserve, payout)->
 
       if prices.sellBid and sellBTC > 0
         gap = ( btc.available * prices.sellBid ) - investment
-        console.log "We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.sellBid)}/BTC, or #{pricing.btc(sellBTC)}BTC"
+        console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.sellBid)}/BTC, or #{pricing.btc(sellBTC)}BTC"
         sellSpread = spreader 0.01, offset
         sideSell = (order)->
           R.merge side: 'sell', order
@@ -65,7 +66,7 @@ fixedInvestment = (investment, reserve, payout)->
 
       if prices.buyBid and buyBTC > 0
         gap = ( btc.available * prices.buyBid ) - investment
-        console.log "We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buyBid)}/BTC, or #{pricing.btc(buyBTC)}BTC"
+        console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buyBid)}/BTC, or #{pricing.btc(buyBTC)}BTC"
         buySpread = spreader 0.01, (-1 * offset)
         sideBuy = (order)->
           R.merge side: 'buy', order
@@ -132,7 +133,7 @@ fixedInvestment = (investment, reserve, payout)->
 
 
   update()
-  setInterval update, 1000 * 60
+  setInterval update, 1000 * 20
 
 
   stream.on 'open', ->
