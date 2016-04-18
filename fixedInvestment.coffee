@@ -7,12 +7,14 @@
 
 
 R = require 'ramda'
+RSVP = require 'rsvp'
 # td = require 'throttle-debounce'
 acct = require 'accounting'
 
 stream = require './stream'
-client = require './client'
+client = require './lib/coinbase-client'
 pricing = require './pricing'
+spreader = require './lib/spreadPrice'
 
 matchCurrency = (currency)->
   (account)->
@@ -25,22 +27,23 @@ isBTC = matchCurrency 'BTC'
 fixedInvestment = (investment, reserve, payout)->
   console.log "Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
+
+  offset = 0.1
+
   prices = {}
   updatePrices = (data)->
     prices = R.merge prices, data
     # console.log prices
 
+  openOrders = []
+  orders = []
 
   update = ->
-    console.log 'update'
+    # console.log 'update'
     assess = (err, response)->
       data = JSON.parse response.body
-      # console.log data
 
       btc = (R.filter isBTC, data)[0]
-      # console.log btc
-
-
 
       sell = btc.available * prices.sellBid
       buy = btc.available * prices.buyBid
@@ -48,49 +51,88 @@ fixedInvestment = (investment, reserve, payout)->
       sellBTC = ( sell - investment ) / prices.sellBid
       buyBTC = ( investment - buy ) / prices.buyBid
 
+
       bids = []
 
-      sellOrder =
-        side: 'sell'
-        size: pricing.btc sellBTC
-        price: pricing.usd prices.sellBid
+      if prices.sellBid and sellBTC > 0
+        gap = ( btc.available * prices.sellBid ) - investment
+        console.log "We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.sellBid)}/BTC, or #{pricing.btc(sellBTC)}BTC"
+        sellSpread = spreader 0.01, offset
+        sideSell = (order)->
+          R.merge side: 'sell', order
 
-      bids.push sellOrder if prices.sellBid
+        bids.push R.map sideSell, sellSpread prices.sellBid, sellBTC
 
-      buyOrder =
-        side: 'buy'
-        size: pricing.btc(buyBTC)
-        price: pricing.usd prices.buyBid
+      if prices.buyBid and buyBTC > 0
+        gap = ( btc.available * prices.buyBid ) - investment
+        console.log "We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buyBid)}/BTC, or #{pricing.btc(buyBTC)}BTC"
+        buySpread = spreader 0.01, (-1 * offset)
+        sideBuy = (order)->
+          R.merge side: 'buy', order
 
-      bids.push buyOrder if prices.buyBid
-
-      console.log 'bids', bids
-
-      positiveBid = (bid)->
-        parseFloat(bid.size) > 0
-
-      insufficientFunds = (bid)->
-        parseFloat(bid.size) < 0.01
-
-      console.log 'valid', R.reject insufficientFunds, R.filter positiveBid, bids
+        bids.push R.map sideBuy, buySpread prices.buyBid, buyBTC
 
 
 
-      # if btc.available < investment
-      #   if prices.buy
-      #     gap = investment - btc.available
-      #     console.log "We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buy)}"
 
-      # if btc.available > investment
-      #   gap = btc.available - investment
-      #   console.log "We'd want to sell #{acct.formatMoney(gap)} worth of BTC"
+      # console.log 'bids', R.flatten bids
+
+
+      cancelOrder = (id)->
+        # console.log 'promise to cancel ' + id
+        client.cancelOrder id
+
+      # ordersToCancel = R.pluck 'id', orders
+      # console.log 'ordersToCancel', orders
+      cancelPromises = R.map cancelOrder, orders
+
+      makeOrder = (order)->
+        client.order order
+        # console.log order
+
+      makeOrders = (data)->
+        getId = (foo)->
+          R.keys foo
+
+        canceledOrders = R.flatten R.map getId, data
+
+        # console.log 'cancellations done happened', canceledOrders
+
+        removeFromActiveOrders = (id)->
+          index = R.indexOf id, orders
+          orders = R.remove index, 1, orders
+
+        R.forEach removeFromActiveOrders, canceledOrders
+
+
+        newOrders = R.map makeOrder, R.flatten bids
+
+        RSVP.all(newOrders).then (data)->
+          orders = orders.concat R.pluck 'id', data
+          # console.log 'orders', orders
+
+
+      RSVP.all(cancelPromises).then(makeOrders).catch (error)->
+        console.log 'cancel order error', error
+
+      # positiveBid = (bid)->
+      #   parseFloat(bid.size) > 0
+
+      # insufficientFunds = (bid)->
+      #   parseFloat(bid.size) < 0.01
+
+      # valid = R.reject insufficientFunds, R.filter positiveBid, R.flatten bids
+      # console.log 'valid', valid
+      # console.log R.equals valid, bids
+
+
 
 
     client.getAccounts assess
 
 
   update()
-  setInterval update, 1000 * 6
+  setInterval update, 1000 * 60
 
 
   stream.on 'open', ->
@@ -99,7 +141,6 @@ fixedInvestment = (investment, reserve, payout)->
   stream.on 'message', (data, flags) ->
     json = JSON.parse data
     if json.type is 'match'
-      offset = 0.05
       offset = offset * -1 if json.side is 'buy'
       price = parseFloat json.price
       bidPrice = price + offset
@@ -107,6 +148,14 @@ fixedInvestment = (investment, reserve, payout)->
       obj[json.side] = price
       obj[json.side + 'Bid'] = bidPrice
       updatePrices obj
+
+    # if json.type is 'received'
+    #   if R.contains json.order_id, orders
+    #     console.log 'received', JSON.stringify json
+
+    if json.type is 'filled'
+      if R.contains json.order_id, orders
+        console.log 'filled', JSON.stringify json
 
 
 module.exports = fixedInvestment
