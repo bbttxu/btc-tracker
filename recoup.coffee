@@ -28,7 +28,7 @@ recoup = ->
       if overage > take
         withdrawl =
           amount: take
-          coinbase_account_id: account.id
+          # coinbase_account_id: account.id
 
         client.withdraw withdrawl, (err, message)->
           notification "You made #{acct.formatMoney(withdrawl.take)}!"

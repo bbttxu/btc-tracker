@@ -29,7 +29,7 @@ fixedInvestment = (investment, reserve, payout)->
   console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
 
-  offset = 0.1
+  offset = 0.33
 
   prices = {}
   updatePrices = (data)->
@@ -39,97 +39,165 @@ fixedInvestment = (investment, reserve, payout)->
   openOrders = []
   orders = []
 
+
+
+
+
+
   update = ->
-    # console.log 'update'
-    assess = (err, response)->
-      data = JSON.parse response.body
 
-      btc = (R.filter isBTC, data)[0]
+    # Cancel Orders
+    cancelOrder = (id)->
+      client.cancelOrder id
 
-      sell = btc.available * prices.sellBid
-      buy = btc.available * prices.buyBid
+    cancelPreviousOrders = R.map cancelOrder, orders
 
-      sellBTC = ( sell - investment ) / prices.sellBid
-      buyBTC = ( investment - buy ) / prices.buyBid
+    # Pay yourself
+    payYourself = (bar)->
+      new RSVP.Promise (resolve, reject)->
+        console.log 'payYourself', bar
+        foo = client.getAccounts('USD')
 
+        foo.then (accounts)->
+          account = accounts[0]
 
-      bids = []
-
-      if prices.sellBid and sellBTC > 0
-        gap = ( btc.available * prices.sellBid ) - investment
-        console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.sellBid)}/BTC, or #{pricing.btc(sellBTC)}BTC"
-        sellSpread = spreader 0.01, offset
-        sideSell = (order)->
-          R.merge side: 'sell', order
-
-        bids.push R.map sideSell, sellSpread prices.sellBid, sellBTC
-
-      if prices.buyBid and buyBTC > 0
-        gap = ( btc.available * prices.buyBid ) - investment
-        console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buyBid)}/BTC, or #{pricing.btc(buyBTC)}BTC"
-        buySpread = spreader 0.01, (-1 * offset)
-        sideBuy = (order)->
-          R.merge side: 'buy', order
-
-        bids.push R.map sideBuy, buySpread prices.buyBid, buyBTC
+          take = account.balance - ( reserve + payout )
 
 
+          # console.log account
+
+          if take > 0
+            withdrawl =
+              coinbase_account_id: account.id
+              amount: pricing.usd 1
+
+            asdf = client.withdraw( withdrawl )
+
+            asdf.then (value)->
+              # console.log withdrawl, value
+              # reject value if (value.message is 'Forbidden') or (value.message is 'Not found')
+              resolve bar
+           else
+             resolve 'stay poor'
 
 
-      # console.log 'bids', R.flatten bids
+    # Determine your position
+    determinePosition = (foo)->
+      console.log foo, 'determinePosition'
+      new RSVP.Promise (resolve, reject)->
+
+        determine = (data)->
+          # reject '' if err
+          # data = JSON.parse response.body
+
+          btc = (R.filter isBTC, data)[0]
 
 
-      cancelOrder = (id)->
-        # console.log 'promise to cancel ' + id
-        client.cancelOrder id
+          sell = btc.available * prices.sellBid
+          buy = btc.available * prices.buyBid
 
-      # ordersToCancel = R.pluck 'id', orders
-      # console.log 'ordersToCancel', orders
-      cancelPromises = R.map cancelOrder, orders
-
-      makeOrder = (order)->
-        client.order order
-        # console.log order
-
-      makeOrders = (data)->
-        getId = (foo)->
-          R.keys foo
-
-        canceledOrders = R.flatten R.map getId, data
-
-        # console.log 'cancellations done happened', canceledOrders
-
-        removeFromActiveOrders = (id)->
-          index = R.indexOf id, orders
-          orders = R.remove index, 1, orders
-
-        R.forEach removeFromActiveOrders, canceledOrders
+          sellBTC = ( sell - investment ) / prices.sellBid
+          buyBTC = ( investment - buy ) / prices.buyBid
 
 
-        newOrders = R.map makeOrder, R.flatten bids
+          bids = []
 
-        RSVP.all(newOrders).then (data)->
-          orders = orders.concat R.pluck 'id', data
-          # console.log 'orders', orders
+          if prices.sellBid and sellBTC > 0
+            gap = ( btc.available * prices.sellBid ) - investment
+            console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.sellBid)}/BTC, or #{pricing.btc(sellBTC)}BTC"
+            sellSpread = spreader 0.01, offset
+            sideSell = (order)->
+              R.merge side: 'sell', order
+
+            bids.push R.map sideSell, sellSpread prices.sellBid, sellBTC
+
+          if prices.buyBid and buyBTC > 0
+            gap = ( btc.available * prices.buyBid ) - investment
+            console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buyBid)}/BTC, or #{pricing.btc(buyBTC)}BTC"
+            buySpread = spreader 0.01, (-1 * offset)
+            sideBuy = (order)->
+              R.merge side: 'buy', order
+
+            bids.push R.map sideBuy, buySpread prices.buyBid, buyBTC
+
+          # console.log bids
+          resolve R.flatten bids
+
+        console.log 'do it'
+        client.getAccounts().then determine
+
+    # Execute new Position
+    placeNewOrders = (foo)->
+      console.log foo, 'placeNewOrders'
+      new RSVP.Promise (resolve, reject)->
+        console.log 'placeNewOrders'
+
+    # Error handling
+    onError = (error)->
+      console.log 'onError', error
+
+    # .then(determinePosition).then(determinePosition)
+    RSVP.all(cancelPreviousOrders).then(payYourself).then(determinePosition).then(placeNewOrders).catch(onError)
+
+      # client.getAccounts assess
 
 
-      RSVP.all(cancelPromises).then(makeOrders).catch (error)->
-        console.log 'cancel order error', error
+    # assess = (err, response)->
+    #   data = JSON.parse response.body
 
-      # positiveBid = (bid)->
-      #   parseFloat(bid.size) > 0
+    #   btc = (R.filter isBTC, data)[0]
 
-      # insufficientFunds = (bid)->
-      #   parseFloat(bid.size) < 0.01
+    #   sell = btc.available * prices.sellBid
+    #   buy = btc.available * prices.buyBid
 
-      # valid = R.reject insufficientFunds, R.filter positiveBid, R.flatten bids
-      # console.log 'valid', valid
-      # console.log R.equals valid, bids
+    #   sellBTC = ( sell - investment ) / prices.sellBid
+    #   buyBTC = ( investment - buy ) / prices.buyBid
 
 
+    #   bids = []
+
+    #   if prices.sellBid and sellBTC > 0
+    #     gap = ( btc.available * prices.sellBid ) - investment
+    #     console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.sellBid)}/BTC, or #{pricing.btc(sellBTC)}BTC"
+    #     sellSpread = spreader 0.01, offset
+    #     sideSell = (order)->
+    #       R.merge side: 'sell', order
+
+    #     bids.push R.map sideSell, sellSpread prices.sellBid, sellBTC
+
+    #   if prices.buyBid and buyBTC > 0
+    #     gap = ( btc.available * prices.buyBid ) - investment
+    #     console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buyBid)}/BTC, or #{pricing.btc(buyBTC)}BTC"
+    #     buySpread = spreader 0.01, (-1 * offset)
+    #     sideBuy = (order)->
+    #       R.merge side: 'buy', order
+
+    #     bids.push R.map sideBuy, buySpread prices.buyBid, buyBTC
+
+    makeOrder = (order)->
+      client.order order
+      # console.log order
+
+    makeOrders = (data)->
+      getId = (foo)->
+        R.keys foo
+
+      canceledOrders = R.flatten R.map getId, data
+
+      # console.log 'cancellations done happened', canceledOrders
+
+      removeFromActiveOrders = (id)->
+        index = R.indexOf id, orders
+        orders = R.remove index, 1, orders
+
+      R.forEach removeFromActiveOrders, canceledOrders
 
 
-    client.getAccounts assess
+      newOrders = R.map makeOrder, R.flatten bids
+
+      RSVP.all(newOrders).then (data)->
+        orders = orders.concat R.pluck 'id', data
+
 
 
   update()
