@@ -66,10 +66,22 @@ fixedInvestment = (investment, reserve, payout)->
            else
              resolve 'stay poor'
 
+    getStats = (bar)->
+      console.log 'getStats'
+      new RSVP.Promise (resolve, reject)->
+
+        onThen = (value)->
+          resolve value
+
+        onCatch = (value)->
+          reject value
+
+        client.stats().then(onThen).catch(onCatch)
+
 
     # Determine your position
-    determinePosition = (foo)->
-      console.log 'determinePosition'
+    determinePosition = (stats)->
+      console.log JSON.stringify stats, 'determinePosition'
       new RSVP.Promise (resolve, reject)->
 
         determine = (data)->
@@ -91,18 +103,18 @@ fixedInvestment = (investment, reserve, payout)->
             sideSell = (order)->
               R.merge side: 'sell', order
 
-            bids.push R.map sideSell, sellSpread prices.sellBid, sellBTC
+            bids.push R.map sideSell, sellSpread stats.high, sellBTC
 
           if prices.buyBid and buyBTC > 0
             gap = ( btc.available * prices.buyBid ) - investment
             console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buyBid)}/BTC, or #{pricing.btc(buyBTC)}BTC"
-            buySpread = spreader 0.01, (-1 * offset)
+            buySpread = spreader 0.01, ( -1.0 * offset )
             sideBuy = (order)->
               R.merge side: 'buy', order
 
-            bids.push R.map sideBuy, buySpread prices.buyBid, buyBTC
+            bids.push R.map sideBuy, buySpread stats.low, buyBTC
 
-          # console.log bids
+          # console.log R.flatten bids
           resolve R.flatten bids
 
         client.getAccounts().then determine
@@ -125,7 +137,7 @@ fixedInvestment = (investment, reserve, payout)->
     onError = (error)->
       console.log 'onError', error
 
-    RSVP.all(cancelPreviousOrders).then(payYourself).then(determinePosition).then(placeNewOrders).catch(onError)
+    RSVP.all(cancelPreviousOrders).then(payYourself).then(getStats).then(determinePosition).then(placeNewOrders).catch(onError)
 
 
   update()

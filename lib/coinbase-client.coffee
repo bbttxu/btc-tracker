@@ -19,6 +19,17 @@ parcel = (options)->
 
   order
 
+
+stats = (currency = 'BTC-USD')->
+  new RSVP.Promise (resolve, reject)->
+    callback = (err, json)->
+      if err
+        reject err
+
+      resolve JSON.parse json.body
+
+    authedClient.getProduct24HrStats callback
+
 getAccounts = (currency = 'BTC')->
   new RSVP.Promise (resolve, reject)->
     callback = (err, json)->
@@ -87,6 +98,7 @@ cancelOrder = ( order )->
     authedClient.cancelOrder order, callback
 
 module.exports =
+  stats: stats
   getAccounts: getAccounts
   # sell: sell
   # buy: buy
