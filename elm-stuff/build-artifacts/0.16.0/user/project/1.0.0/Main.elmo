@@ -1,0 +1,27 @@
+Elm.Main = Elm.Main || {};
+Elm.Main.make = function (_elm) {
+   "use strict";
+   _elm.Main = _elm.Main || {};
+   if (_elm.Main.values) return _elm.Main.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var placeOrder = Elm.Native.Port.make(_elm).inboundSignal("placeOrder",
+   "Main.Order",
+   function (v) {
+      return typeof v === "object" && "id" in v && "size" in v && "price" in v ? {_: {}
+                                                                                 ,id: typeof v.id === "string" || typeof v.id === "object" && v.id instanceof String ? v.id : _U.badPort("a string",
+                                                                                 v.id)
+                                                                                 ,size: typeof v.size === "string" || typeof v.size === "object" && v.size instanceof String ? v.size : _U.badPort("a string",
+                                                                                 v.size)
+                                                                                 ,price: typeof v.price === "string" || typeof v.price === "object" && v.price instanceof String ? v.price : _U.badPort("a string",
+                                                                                 v.price)} : _U.badPort("an object with fields `id`, `size`, `price`",v);
+   });
+   var Order = F3(function (a,b,c) {    return {id: a,size: b,price: c};});
+   return _elm.Main.values = {_op: _op,Order: Order};
+};
