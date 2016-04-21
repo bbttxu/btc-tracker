@@ -28,25 +28,16 @@ isBTC = matchCurrency 'BTC'
 fixedInvestment = (investment, reserve, payout)->
   console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
-
   offset = 0.33
 
   prices = {}
   updatePrices = (data)->
     prices = R.merge prices, data
-    # console.log prices
 
   openOrders = []
   orders = []
 
-
-
-
-
-
   update = ->
-
-    # Cancel Orders
     cancelOrder = (id)->
       client.cancelOrder id
 
@@ -55,7 +46,6 @@ fixedInvestment = (investment, reserve, payout)->
     # Pay yourself
     payYourself = (bar)->
       new RSVP.Promise (resolve, reject)->
-        console.log 'payYourself', bar
         foo = client.getAccounts('USD')
 
         foo.then (accounts)->
@@ -63,8 +53,6 @@ fixedInvestment = (investment, reserve, payout)->
 
           take = account.balance - ( reserve + payout )
 
-
-          # console.log account
 
           if take > 0
             withdrawl =
@@ -74,8 +62,6 @@ fixedInvestment = (investment, reserve, payout)->
             asdf = client.withdraw( withdrawl )
 
             asdf.then (value)->
-              # console.log withdrawl, value
-              # reject value if (value.message is 'Forbidden') or (value.message is 'Not found')
               resolve bar
            else
              resolve 'stay poor'
@@ -83,15 +69,11 @@ fixedInvestment = (investment, reserve, payout)->
 
     # Determine your position
     determinePosition = (foo)->
-      console.log foo, 'determinePosition'
+      console.log 'determinePosition'
       new RSVP.Promise (resolve, reject)->
 
         determine = (data)->
-          # reject '' if err
-          # data = JSON.parse response.body
-
           btc = (R.filter isBTC, data)[0]
-
 
           sell = btc.available * prices.sellBid
           buy = btc.available * prices.buyBid
@@ -123,85 +105,31 @@ fixedInvestment = (investment, reserve, payout)->
           # console.log bids
           resolve R.flatten bids
 
-        console.log 'do it'
         client.getAccounts().then determine
 
     # Execute new Position
-    placeNewOrders = (foo)->
-      console.log foo, 'placeNewOrders'
+    placeNewOrders = (data)->
+      console.log data, 'placeNewOrders'
       new RSVP.Promise (resolve, reject)->
-        console.log 'placeNewOrders'
+        makeOrder = (order)->
+          client.order order
+
+
+        newOrders = R.map makeOrder, R.flatten data
+
+        RSVP.all(newOrders).then (result)->
+          orders = orders.concat R.pluck 'id', result
+          resolve orders
 
     # Error handling
     onError = (error)->
       console.log 'onError', error
 
-    # .then(determinePosition).then(determinePosition)
     RSVP.all(cancelPreviousOrders).then(payYourself).then(determinePosition).then(placeNewOrders).catch(onError)
-
-      # client.getAccounts assess
-
-
-    # assess = (err, response)->
-    #   data = JSON.parse response.body
-
-    #   btc = (R.filter isBTC, data)[0]
-
-    #   sell = btc.available * prices.sellBid
-    #   buy = btc.available * prices.buyBid
-
-    #   sellBTC = ( sell - investment ) / prices.sellBid
-    #   buyBTC = ( investment - buy ) / prices.buyBid
-
-
-    #   bids = []
-
-    #   if prices.sellBid and sellBTC > 0
-    #     gap = ( btc.available * prices.sellBid ) - investment
-    #     console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.sellBid)}/BTC, or #{pricing.btc(sellBTC)}BTC"
-    #     sellSpread = spreader 0.01, offset
-    #     sideSell = (order)->
-    #       R.merge side: 'sell', order
-
-    #     bids.push R.map sideSell, sellSpread prices.sellBid, sellBTC
-
-    #   if prices.buyBid and buyBTC > 0
-    #     gap = ( btc.available * prices.buyBid ) - investment
-    #     console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(prices.buyBid)}/BTC, or #{pricing.btc(buyBTC)}BTC"
-    #     buySpread = spreader 0.01, (-1 * offset)
-    #     sideBuy = (order)->
-    #       R.merge side: 'buy', order
-
-    #     bids.push R.map sideBuy, buySpread prices.buyBid, buyBTC
-
-    makeOrder = (order)->
-      client.order order
-      # console.log order
-
-    makeOrders = (data)->
-      getId = (foo)->
-        R.keys foo
-
-      canceledOrders = R.flatten R.map getId, data
-
-      # console.log 'cancellations done happened', canceledOrders
-
-      removeFromActiveOrders = (id)->
-        index = R.indexOf id, orders
-        orders = R.remove index, 1, orders
-
-      R.forEach removeFromActiveOrders, canceledOrders
-
-
-      newOrders = R.map makeOrder, R.flatten bids
-
-      RSVP.all(newOrders).then (data)->
-        orders = orders.concat R.pluck 'id', data
-
 
 
   update()
-  setInterval update, 1000 * 20
+  setInterval update, 1000 * 60
 
 
   stream.on 'open', ->
