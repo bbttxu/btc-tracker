@@ -2,7 +2,9 @@ R = require 'ramda'
 pricing = require '../pricing'
 
 spreadPrice = (BTCincrementor, USDincrementor)->
+  # console.log 'a', BTCincrementor, USDincrementor
   (price, size)->
+    # console.log 'b', price, size
 
     # the number of buys needed to satisfy the suggested btc order size
     buys = Math.floor size / BTCincrementor
@@ -15,6 +17,7 @@ spreadPrice = (BTCincrementor, USDincrementor)->
     # Create the orders
     mapIndexed = R.addIndex(R.map)
     getPrices = (orderSize, index)->
+      # console.log orderSize, index
       orderPrice = parseFloat(price) + ( index * USDincrementor )
       order =
         price: pricing.usd orderPrice

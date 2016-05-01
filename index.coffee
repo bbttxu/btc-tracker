@@ -1,3 +1,3 @@
 FixedInvestment = require './fixedInvestment'
 
-FixedInvestment 1000, 600, 5
+FixedInvestment 500, 500, 5
