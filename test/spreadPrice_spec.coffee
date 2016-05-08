@@ -40,3 +40,10 @@ describe "spreads price/buys out with minimum size and dollar increments", ->
     results = spreader 432.37, 0.0021
 
     results.should.be.eql []
+
+  it 'handles a negative amount', ->
+    spreader = spreadPrice 0.01, 0.01
+
+    results = spreader 432.37, -0.0021
+
+    results.should.be.eql []
