@@ -97,6 +97,15 @@ cancelOrder = ( order )->
 
     authedClient.cancelOrder order, callback
 
+getFills = ->
+  new RSVP.Promise (resolve, reject)->
+    authedClient.getFills (err, data)->
+      if err
+        data = JSON.parse err.body
+        console.log 'err', data, order
+
+      resolve JSON.parse data.body
+
 module.exports =
   stats: stats
   getAccounts: getAccounts
@@ -106,3 +115,4 @@ module.exports =
   withdraw: withdraw
   cancelOrder: cancelOrder
   order: order
+  getFills: getFills
