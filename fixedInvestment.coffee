@@ -88,11 +88,11 @@ fixedInvestment = (investment, reserve, payout)->
           # console.log 'determine', data
           btc = (R.filter isBTC, data)[0]
 
-          # sellPrice = prices.sellBid or stats.high
-          sellPrice = stats.high
+          sellPrice = prices.sellBid or stats.high
+          # sellPrice = stats.high
 
-          # buyPrice = prices.buyBid
-          buyPrice = stats.low
+          buyPrice = prices.buyBid or stats.low
+          # buyPrice = stats.low
 
           sell = btc.available * sellPrice
           buy = btc.available * buyPrice
@@ -144,7 +144,7 @@ fixedInvestment = (investment, reserve, payout)->
     RSVP.all(cancelPreviousOrders).then(payYourself).then(getStats).then(determinePosition).then(placeNewOrders).catch(onError)
 
 
-  update()
+  setTimeout update, 1000 * 60
   setInterval update, 1000 * 60 * 60
 
 
