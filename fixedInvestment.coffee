@@ -28,7 +28,7 @@ isBTC = matchCurrency 'BTC'
 fixedInvestment = (investment, reserve, payout)->
   console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
-  offset = 0.33
+  offset = 0.99
 
   prices = {}
   updatePrices = (data)->
@@ -87,52 +87,38 @@ fixedInvestment = (investment, reserve, payout)->
         determine = (data)->
           # console.log 'determine', data
           btc = (R.filter isBTC, data)[0]
-          # console.log 'btc', prices
-          # console.log 'stats', stats
-
 
           # sellPrice = prices.sellBid or stats.high
           sellPrice = stats.high
 
-          buyPrice = prices.buyBid or stats.low
-          # buyPrice = stats.low
-          console.log prices.buyBid, stats.low
+          # buyPrice = prices.buyBid
+          buyPrice = stats.low
 
           sell = btc.available * sellPrice
           buy = btc.available * buyPrice
-          # console.log sellPrice, buyPrice, sell, buy, investment
 
           sellBTC = ( sell - investment ) / sellPrice
           buyBTC = ( investment - buy ) / buyPrice
 
-          # console.log sellBTC, buyBTC
-
           bids = []
 
-          # if sellPrice
-          #   gap = ( btc.available * sellPrice ) - investment
-          #   console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(sellPrice)}/BTC, or #{pricing.btc(sellBTC)}BTC"
-          #   sellSpread = spreader 0.01, offset
-          #   sideSell = (order)->
-          #     R.merge side: 'sell', order
+          if sellPrice and sellBTC > 0
+            gap = ( btc.available * sellPrice ) - investment
+            console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(sellPrice)}/BTC, or #{pricing.btc(sellBTC)}BTC"
+            sellSpread = spreader 0.01, offset
+            sideSell = (order)->
+              R.merge side: 'sell', order
 
-          #   bar = sellSpread sellPrice, sellBTC
-          #   console.log bar
-          #   foo = R.map sideSell, bar
-          #   console.log foo
-          #   bids.push foo
+            bids.push R.map sideSell, sellSpread sellPrice, sellBTC
 
-          if buyPrice
+          if buyPrice and buyBTC > 0
             gap = ( btc.available * buyPrice ) - investment
             console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(buyPrice)}/BTC, or #{pricing.btc(buyBTC)}BTC"
             buySpread = spreader 0.01, ( -1.0 * offset )
             sideBuy = (order)->
-              # console.log order
               R.merge side: 'buy', order
 
             bids.push R.map sideBuy, buySpread buyPrice, buyBTC
-
-          # console.log R.flatten bids
           resolve R.flatten bids
 
         client.getAccounts().then determine
@@ -159,7 +145,7 @@ fixedInvestment = (investment, reserve, payout)->
 
 
   update()
-  setInterval update, 1000 * 60
+  setInterval update, 1000 * 60 * 60
 
 
   stream.on 'open', ->
