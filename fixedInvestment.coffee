@@ -25,10 +25,8 @@ isUSD = matchCurrency 'USD'
 isBTC = matchCurrency 'BTC'
 
 
-fixedInvestment = (investment, reserve, payout)->
+fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
   console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
-
-  offset = 0.99
 
   prices = {}
   updatePrices = (data)->
@@ -81,18 +79,19 @@ fixedInvestment = (investment, reserve, payout)->
 
     # Determine your position
     determinePosition = (stats)->
-      # console.log JSON.stringify stats, 'determinePosition'
+      console.log JSON.stringify stats, 'determinePosition'
       new RSVP.Promise (resolve, reject)->
 
         determine = (data)->
           # console.log 'determine', data
           btc = (R.filter isBTC, data)[0]
 
-          sellPrice = prices.sellBid or stats.high
-          # sellPrice = stats.high
+          # sellPrice = prices.sellBid or stats.high
+          sellPrice = stats.high
 
-          buyPrice = prices.buyBid or stats.low
-          # buyPrice = stats.low
+          buyPrice = stats.low
+          if prices.buyBid and prices.buyBid < stats.open
+            buyPrice = prices.buyBid
 
           sell = btc.available * sellPrice
           buy = btc.available * buyPrice
@@ -112,7 +111,7 @@ fixedInvestment = (investment, reserve, payout)->
             bids.push R.map sideSell, sellSpread sellPrice, sellBTC
 
           if buyPrice and buyBTC > 0
-            gap = ( btc.available * buyPrice ) - investment
+            gap = investment - ( btc.available * buyPrice )
             console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(buyPrice)}/BTC, or #{pricing.btc(buyBTC)}BTC"
             buySpread = spreader 0.01, ( -1.0 * offset )
             sideBuy = (order)->
@@ -125,7 +124,7 @@ fixedInvestment = (investment, reserve, payout)->
 
     # Execute new Position
     placeNewOrders = (data)->
-      console.log data, 'placeNewOrders'
+      # console.log data, 'placeNewOrders'
       new RSVP.Promise (resolve, reject)->
         makeOrder = (order)->
           client.order order
@@ -145,8 +144,7 @@ fixedInvestment = (investment, reserve, payout)->
 
 
   setTimeout update, 1000 * 60
-  setInterval update, 1000 * 60 * 60
-
+  setInterval update, 1000 * 60 * minutes
 
   stream.on 'open', ->
     stream.send JSON.stringify product_id: 'BTC-USD', type: 'subscribe'

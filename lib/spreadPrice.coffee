@@ -18,7 +18,7 @@ spreadPrice = (BTCincrementor, USDincrementor)->
     # Create the orders
     mapIndexed = R.addIndex(R.map)
     getPrices = (orderSize, index)->
-      orderPrice = parseFloat(price) + ( index * USDincrementor )
+      orderPrice = parseFloat(price) + ( ( index + 1 ) * USDincrementor )
       order =
         price: pricing.usd orderPrice
         size: pricing.btc orderSize
