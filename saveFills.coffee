@@ -86,5 +86,6 @@ runScheduled = ->
 
 
 module.exports = (hours)->
+  console.log "Update Fills every #{hours} hours"
   setInterval runScheduled, 1000 * 60 * 60 * hours
   runScheduled()
