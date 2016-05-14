@@ -7,8 +7,9 @@ pricing = require './pricing'
 logger = require './logger'
 running = require './running'
 orderBook = require './orderBook'
+cleanSlate = require './cleanSlate'
 
-cleanup = (spread, size)->
+cleanup = (spread, size, backlog = 1)->
 
   # Log events to the console as they happen
   log = (data)->
@@ -33,7 +34,10 @@ cleanup = (spread, size)->
   # Open Sells, pull data from current order book
   openSells = []
   orderBook.sells (data)->
-    openSells = R.pluck('id') data
+    isRightSize = (value)->
+      parseFloat(value.size) is parseFloat(size)
+
+    openSells = R.pluck('id') R.filter isRightSize, data
 
   buys = []
 
@@ -49,6 +53,8 @@ cleanup = (spread, size)->
     client.buy order, ( err, response )->
       data = JSON.parse response.body
       logOrder data
+
+      cleanSlate.stale size, backlog
 
 
   handleMatch = (data)->

@@ -19,15 +19,19 @@ recoup = ->
 
     account = ( R.filter isUSD, data )[0]
 
-    overage = account.available - BASE
+    # TODO this started failing because account is undefined
+    if account
 
-    if overage > take
-      withdrawl =
-        amount: take
-        coinbase_account_id: account.id
+      # console.log account, ( R.filter isUSD, data )
+      overage = account.available - BASE
 
-      client.withdraw withdrawl, (err, message)->
-        notification "You made #{acct.formatMoney(withdrawl.take)}!"
+      if overage > take
+        withdrawl =
+          amount: take
+          # coinbase_account_id: account.id
+
+        client.withdraw withdrawl, (err, message)->
+          notification "You made #{acct.formatMoney(withdrawl.take)}!"
 
   client.getAccounts getYerTake
 
