@@ -1,7 +1,12 @@
 clockwork = require('clockwork')(key: process.env.CLOCKWORK)
+phoneNumber = process.env.PHONENUMBER
 
 module.exports = (msg)->
-  clockwork.sendSms msg, (error, resp) ->
+  payload =
+    To: phoneNumber
+    Content: msg
+
+  clockwork.sendSms payload, (error, resp) ->
     if error
       console.log 'Something went wrong', error
     else

@@ -5,6 +5,7 @@ moment = require 'moment'
 mongo = require('mongodb').MongoClient
 
 client = require './lib/coinbase-client.coffee'
+notify = require './notification'
 
 findOrCreateFill = (db, fill)->
   new RSVP.Promise (resolve, reject)->
@@ -64,7 +65,7 @@ notifyOfUpdates = (updates)->
   details = "#{acct.formatMoney(total)}; (#{acct.formatMoney(buys)}), #{acct.formatMoney(sells)}, since #{moment.utc(earliest).format('YYYY MMMM, DD')}"
 
   console.log details
-
+  notify details
 
 onDone = (data)->
   newUns = R.reject isTrue, data
@@ -84,4 +85,6 @@ runScheduled = ->
   client.getFills().then(logNewFills)
 
 
-runScheduled()
+module.exports = (hours)->
+  setInterval runScheduled, 1000 * 60 * 60 * hours
+  runScheduled()
