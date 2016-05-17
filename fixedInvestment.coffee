@@ -24,6 +24,44 @@ matchCurrency = (currency)->
 isUSD = matchCurrency 'USD'
 isBTC = matchCurrency 'BTC'
 
+orders = []
+
+getCurrentOrders = ->
+  # console.log 'getCurrentOrders', orders
+  new RSVP.Promise ( resolve, reject )->
+    resolve orders
+
+cancelPreviousOrders2 = (orders)->
+  # console.log 'cancelPreviousOrders2', orders
+  new RSVP.Promise (resolve, reject)->
+
+    onThen = (data)->
+      # console.log 'onThen', data
+      resolve data
+
+    onError = (data)->
+      reject data
+
+    RSVP.all( R.map client.cancelOrder, orders ).then( onThen ).catch( onError )
+
+
+removeCurrentOrders = (orders)->
+  # console.log 'removeCurrentOrders', orders
+  new RSVP.Promise ( resolve, reject )->
+
+    alreadyDone = (order)->
+      order.message is 'Order already done' or order.message is 'OK'
+
+    resolve R.pluck 'id', R.reject alreadyDone, orders
+
+
+holdoverQuestionableOrders = (uncertain)->
+  console.log 'holdoverQuestionableOrders', uncertain.length
+  new RSVP.Promise (resolve, reject)->
+    orders = uncertain
+    resolve uncertain
+
+
 
 fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
   console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
@@ -32,8 +70,7 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
   updatePrices = (data)->
     prices = R.merge prices, data
 
-  openOrders = []
-  orders = []
+  # openOrders = []
 
   update = ->
     cancelOrder = (id)->
@@ -92,8 +129,8 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
           buyPrice = stats.low
           if prices.buyBid
             buyPrice = prices.buyBid
-            if prices.buyBid >= stats.open
-              buyPrice = stats.low
+            # if prices.buyBid >= stats.open
+            #   buyPrice = stats.low
 
           sell = btc.available * sellPrice
           buy = btc.available * buyPrice
@@ -142,11 +179,19 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
     onError = (error)->
       console.log 'onError', error
 
-    RSVP.all(cancelPreviousOrders).then(payYourself).then(getStats).then(determinePosition).then(placeNewOrders).catch(onError)
+    getCurrentOrders()
+      .then(cancelPreviousOrders2)
+      .then(removeCurrentOrders)
+      .then(holdoverQuestionableOrders)
+      .then(payYourself)
+      .then(getStats)
+      .then(determinePosition)
+      .then(placeNewOrders)
+      .catch(onError)
 
 
-  setTimeout update, 1000 * 60
   setInterval update, 1000 * 60 * minutes
+  update()
 
   stream.on 'open', ->
     stream.send JSON.stringify product_id: 'BTC-USD', type: 'subscribe'
