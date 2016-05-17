@@ -90,8 +90,10 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
           sellPrice = stats.high
 
           buyPrice = stats.low
-          if prices.buyBid and prices.buyBid < stats.open
+          if prices.buyBid
             buyPrice = prices.buyBid
+            if prices.buyBid >= stats.open
+              buyPrice = stats.low
 
           sell = btc.available * sellPrice
           buy = btc.available * buyPrice
@@ -104,7 +106,7 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
           if sellPrice and sellBTC > 0
             gap = ( btc.available * sellPrice ) - investment
             console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(sellPrice)}/BTC, or #{pricing.btc(sellBTC)}BTC"
-            sellSpread = spreader 0.01, offset
+            sellSpread = spreader 0.025, offset
             sideSell = (order)->
               R.merge side: 'sell', order
 
@@ -113,7 +115,7 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
           if buyPrice and buyBTC > 0
             gap = investment - ( btc.available * buyPrice )
             console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(buyPrice)}/BTC, or #{pricing.btc(buyBTC)}BTC"
-            buySpread = spreader 0.01, ( -1.0 * offset )
+            buySpread = spreader 0.025, ( -1.0 * offset )
             sideBuy = (order)->
               R.merge side: 'buy', order
 

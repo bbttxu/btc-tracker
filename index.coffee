@@ -1,6 +1,6 @@
 FixedInvestment = require './fixedInvestment'
 
-FixedInvestment 1000, 500, 5, 0.33, 15
+FixedInvestment 800, 250, 5, 0.99, 15
 
 # Create Updates of recent trades
 # — save new trades to database for analysis
