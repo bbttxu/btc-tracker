@@ -70,6 +70,7 @@ notifyOfUpdates = (updates)->
 onDone = (data)->
   newUns = R.reject isTrue, data
   notifyOfUpdates(newUns) if newUns.length > 0
+  console.log 'notify', newUns
 
 onError = (err)->
   console.log 'error', err
