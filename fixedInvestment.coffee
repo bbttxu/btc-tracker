@@ -31,6 +31,7 @@ getCurrentOrders = ->
   new RSVP.Promise ( resolve, reject )->
     resolve orders
 
+
 cancelPreviousOrders2 = (orders)->
   # console.log 'cancelPreviousOrders2', orders
   new RSVP.Promise (resolve, reject)->
