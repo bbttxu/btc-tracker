@@ -92,7 +92,11 @@ cancelOrder = ( order )->
         console.log 'err', data, order
 
       obj = {}
-      obj[order] = data.body
+      payload = data.body
+      payload = (JSON.parse data.body).message unless payload is 'OK'
+
+      obj.id = order
+      obj.message = payload
       resolve obj
 
     authedClient.cancelOrder order, callback
