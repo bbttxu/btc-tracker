@@ -32,8 +32,8 @@ getCurrentOrders = ->
     resolve orders
 
 
-cancelPreviousOrders2 = (orders)->
-  # console.log 'cancelPreviousOrders2', orders
+cancelPreviousOrders = (orders)->
+  # console.log 'cancelPreviousOrders', orders
   new RSVP.Promise (resolve, reject)->
 
     onThen = (data)->
@@ -74,11 +74,6 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
   # openOrders = []
 
   update = ->
-    cancelOrder = (id)->
-      client.cancelOrder id
-
-    cancelPreviousOrders = R.map cancelOrder, orders
-
     # Pay yourself
     payYourself = (bar)->
       new RSVP.Promise (resolve, reject)->
@@ -181,7 +176,7 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
       console.log 'onError', error
 
     getCurrentOrders()
-      .then(cancelPreviousOrders2)
+      .then(cancelPreviousOrders)
       .then(removeCurrentOrders)
       .then(holdoverQuestionableOrders)
       .then(payYourself)
