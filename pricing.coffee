@@ -10,8 +10,8 @@ fix = (places, value)->
 usd = (usd)->
   fix USD_PLACES, usd
 
-btc = (btc)->
-  fix BTC_PLACES, btc
+btc = (btc, places = BTC_PLACES)->
+  fix places, btc
 
 module.exports =
   usd: usd,
