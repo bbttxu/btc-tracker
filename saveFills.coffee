@@ -5,7 +5,10 @@ moment = require 'moment'
 mongo = require('mongodb').MongoClient
 
 client = require './lib/coinbase-client.coffee'
+describe = require './lib/describeTrades'
 notify = require './notification'
+
+
 
 findOrCreateFill = (db, fill)->
   new RSVP.Promise (resolve, reject)->
@@ -55,22 +58,17 @@ isTrue = (result)->
 
 
 notifyOfUpdates = (updates)->
-  earliest = ( R.take 1, (R.pluck 'created_at', updates).sort() )[0]
+  details = describe updates
 
-  impacts = R.map impact, updates
-  total = R.sum impacts
-  buys = R.sum R.map impact, R.filter isBuy, updates
-  sells = R.sum R.map impact, R.reject isBuy, updates
-
-  details = "#{acct.formatMoney(total)}; (#{acct.formatMoney(buys)}), #{acct.formatMoney(sells)}, since #{moment.utc(earliest).format('YYYY MMMM, DD')}"
-
-  console.log details
+  # console.log details
   notify details
+  details
 
 onDone = (data)->
   newUns = R.reject isTrue, data
-  notifyOfUpdates(newUns) if newUns.length > 0
-  console.log 'notify', newUns
+  details = 'no updates'
+  details = notifyOfUpdates(newUns) if newUns.length > 0
+  console.log 'notify:', details
 
 onError = (err)->
   console.log 'error', err
