@@ -7,7 +7,7 @@ spreadPrice = (BTCincrementor, USDincrementor)->
     # A negative size will fail later, return early with empty array
     return [] if size < 0
 
-    size = 0.01 if size < 0.01
+    size = 0.1 if size < 0.01
 
 
     # the number of buys needed to satisfy the suggested btc order size
