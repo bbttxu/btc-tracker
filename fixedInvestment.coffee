@@ -121,12 +121,14 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
 
           # sellPrice = prices.sellBid or stats.high
           sellPrice = stats.high
+          if prices.sell
+            sellPrice = prices.sell
 
           buyPrice = stats.low
-          if prices.buyBid
-            buyPrice = prices.buyBid
-            if prices.buyBid >= stats.open
-              buyPrice = stats.low
+          if prices.buy
+            buyPrice = prices.buy
+            #if prices.buyBid >= stats.open
+            #  buyPrice = stats.low
 
           sell = btc.available * sellPrice
           buy = btc.available * buyPrice

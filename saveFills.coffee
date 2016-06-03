@@ -61,7 +61,7 @@ notifyOfUpdates = (updates)->
   details = describe updates
 
   # console.log details
-  notify details
+  #notify details
   details
 
 onDone = (data)->
