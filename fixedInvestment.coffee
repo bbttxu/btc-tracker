@@ -197,8 +197,7 @@ fixedInvestment = (investment, reserve, payout, interval = 0.99, offset = 0.99, 
   stream.on 'message', (data, flags) ->
     json = JSON.parse data
     if json.type is 'match'
-      upDown = interval
-      * -1 if json.side is 'buy'
+      upDown = interval * -1 if json.side is 'buy'
       price = parseFloat json.price
       bidPrice = price + upDown
       obj = {}
