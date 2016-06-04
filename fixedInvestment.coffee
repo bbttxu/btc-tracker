@@ -198,7 +198,7 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
       .catch(onError)
 
 
-  setpricingOptions.usdInterval update, 1000 * 60 * minutes
+  setInterval update, 1000 * 60 * minutes
   update()
 
   stream.on 'open', ->
@@ -207,12 +207,12 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
   stream.on 'message', (data, flags) ->
     json = JSON.parse data
     if json.type is 'match'
-      upDown = pricingOptions.usdInterval * -1 if json.side is 'buy'
+      # upDown = pricingOptions.usdInterval * -1 if json.side is 'buy'
       price = parseFloat json.price
-      bidPrice = price + upDown
+      # bidPrice = price + upDown
       obj = {}
       obj[json.side] = price
-      obj[json.side + 'Bid'] = bidPrice
+      # obj[json.side + 'Bid'] = bidPrice
       updatePrices obj
 
     # if json.type is 'received'
