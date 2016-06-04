@@ -151,7 +151,7 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
           if sellPrice and sellBTC > 0
             gap = ( btc.available * sellPrice ) - investment
             console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(sellPrice)}/BTC, or #{pricing.btc(sellBTC)}BTC"
-            sellSpread = spreader pricingSettings.btcSize, pricingSettings.usdInterval, pricingSettings.usdOffset: pricingSettings.usdOffset
+            sellSpread = spreader pricingSettings.btcSize, pricingSettings.usdInterval, offset: pricingSettings.usdOffset
             sideSell = (order)->
               R.merge side: 'sell', order
 
@@ -160,7 +160,7 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
           if buyPrice and buyBTC > 0
             gap = investment - ( btc.available * buyPrice )
             console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(buyPrice)}/BTC, or #{pricing.btc(buyBTC)}BTC"
-            buySpread = spreader pricingSettings.btcSize, ( -1.0 * pricingSettings.usdInterval ), pricingSettings.usdOffset: ( -1.0 * pricingSettings.usdOffset )
+            buySpread = spreader pricingSettings.btcSize, ( -1.0 * pricingSettings.usdInterval ), offset: ( -1.0 * pricingSettings.usdOffset )
             sideBuy = (order)->
               R.merge side: 'buy', order
 
