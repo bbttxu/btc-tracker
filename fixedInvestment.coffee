@@ -64,7 +64,7 @@ holdoverQuestionableOrders = (uncertain)->
 
 
 
-fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
+fixedInvestment = (investment, reserve, payout, interval = 0.99, offset = 0.99, minutes = 60)->
   console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
   prices = {}
@@ -141,7 +141,7 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
           if sellPrice and sellBTC > 0
             gap = ( btc.available * sellPrice ) - investment
             console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(sellPrice)}/BTC, or #{pricing.btc(sellBTC)}BTC"
-            sellSpread = spreader 0.01, offset
+            sellSpread = spreader 0.01, interval, offset: offset
             sideSell = (order)->
               R.merge side: 'sell', order
 
@@ -150,7 +150,7 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
           if buyPrice and buyBTC > 0
             gap = investment - ( btc.available * buyPrice )
             console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(buyPrice)}/BTC, or #{pricing.btc(buyBTC)}BTC"
-            buySpread = spreader 0.01, ( -1.0 * offset )
+            buySpread = spreader 0.01, ( -1.0 * interval ), offset: ( -1.0 * offset )
             sideBuy = (order)->
               R.merge side: 'buy', order
 
@@ -197,7 +197,8 @@ fixedInvestment = (investment, reserve, payout, offset = 0.99, minutes = 60)->
   stream.on 'message', (data, flags) ->
     json = JSON.parse data
     if json.type is 'match'
-      upDown = offset * -1 if json.side is 'buy'
+      upDown = interval
+      * -1 if json.side is 'buy'
       price = parseFloat json.price
       bidPrice = price + upDown
       obj = {}
