@@ -1,27 +1,34 @@
 R = require 'ramda'
 pricing = require '../pricing'
 
-spreadPrice = (BTCincrementor, USDincrementor)->
+spreadPrice = (BTCSizeChunk, USDincrementor, options)->
+  defaults =
+    offset: USDincrementor
+
+  settings = R.mergeAll [ {}, defaults, options ]
+
   (price, size)->
 
     # A negative size will fail later, return early with empty array
     return [] if size < 0
 
-    size = 0.1 if size < 0.01
+    # Ensure a order meets minumum size
+    # This is by design—meant to keep trading happening—and might be re-evaluated later
+    size = BTCSizeChunk if size < BTCSizeChunk
 
 
     # the number of buys needed to satisfy the suggested btc order size
-    buys = Math.floor size / BTCincrementor
-    sizes = R.repeat BTCincrementor, buys
+    buys = Math.floor size / BTCSizeChunk
+    sizes = R.repeat BTCSizeChunk, buys
 
     # left over amounts needed to be added to fulfill cumulative order size
-    remainder = size % BTCincrementor
+    remainder = size % BTCSizeChunk
     sizes[0] = sizes[0] + remainder if sizes[0]
 
     # Create the orders
     mapIndexed = R.addIndex(R.map)
     getPrices = (orderSize, index)->
-      orderPrice = parseFloat(price) + ( ( index + 1 ) * USDincrementor )
+      orderPrice = parseFloat(price + settings.offset) + ( ( index ) * USDincrementor )
       order =
         price: pricing.usd orderPrice
         size: pricing.btc orderSize
