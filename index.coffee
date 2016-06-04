@@ -1,6 +1,13 @@
 FixedInvestment = require './fixedInvestment'
 
-FixedInvestment 1200, 250, 5, 0.11, 3
+
+pricingOptions =
+  btcSize: 0.025
+  usdOffset: 0.11
+  usdInterval: 0.33
+
+
+FixedInvestment 1000, 250, 5, pricingOptions, 3
 
 # Create Updates of recent trades
 # — save new trades to database for analysis
