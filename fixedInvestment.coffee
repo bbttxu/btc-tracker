@@ -64,7 +64,17 @@ holdoverQuestionableOrders = (uncertain)->
 
 
 
-fixedInvestment = (investment, reserve, payout, interval = 0.99, offset = 0.99, minutes = 60)->
+fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 60)->
+
+  # Pricing/Purchase defaults
+  pricingOptionsDefaults =
+    btcSize: 0.01
+    usdOffset: 0.33
+    usdInterval: 0.99
+
+  pricingSettings = R.mergeAll [ pricingOptionsDefaults, pricingOptions ]
+
+
   console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
   prices = {}
@@ -141,7 +151,7 @@ fixedInvestment = (investment, reserve, payout, interval = 0.99, offset = 0.99, 
           if sellPrice and sellBTC > 0
             gap = ( btc.available * sellPrice ) - investment
             console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(sellPrice)}/BTC, or #{pricing.btc(sellBTC)}BTC"
-            sellSpread = spreader 0.01, interval, offset: offset
+            sellSpread = spreader pricingSettings.btcSize, pricingSettings.usdInterval, pricingSettings.usdOffset: pricingSettings.usdOffset
             sideSell = (order)->
               R.merge side: 'sell', order
 
@@ -150,7 +160,7 @@ fixedInvestment = (investment, reserve, payout, interval = 0.99, offset = 0.99, 
           if buyPrice and buyBTC > 0
             gap = investment - ( btc.available * buyPrice )
             console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(buyPrice)}/BTC, or #{pricing.btc(buyBTC)}BTC"
-            buySpread = spreader 0.01, ( -1.0 * interval ), offset: ( -1.0 * offset )
+            buySpread = spreader pricingSettings.btcSize, ( -1.0 * pricingSettings.usdInterval ), pricingSettings.usdOffset: ( -1.0 * pricingSettings.usdOffset )
             sideBuy = (order)->
               R.merge side: 'buy', order
 
@@ -188,7 +198,7 @@ fixedInvestment = (investment, reserve, payout, interval = 0.99, offset = 0.99, 
       .catch(onError)
 
 
-  setInterval update, 1000 * 60 * minutes
+  setpricingOptions.usdInterval update, 1000 * 60 * minutes
   update()
 
   stream.on 'open', ->
@@ -197,7 +207,7 @@ fixedInvestment = (investment, reserve, payout, interval = 0.99, offset = 0.99, 
   stream.on 'message', (data, flags) ->
     json = JSON.parse data
     if json.type is 'match'
-      upDown = interval * -1 if json.side is 'buy'
+      upDown = pricingOptions.usdInterval * -1 if json.side is 'buy'
       price = parseFloat json.price
       bidPrice = price + upDown
       obj = {}
