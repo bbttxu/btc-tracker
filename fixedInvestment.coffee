@@ -121,7 +121,7 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
 
     # Determine your position
     determinePosition = (stats)->
-      console.log JSON.stringify stats, 'determinePosition'
+      console.log JSON.stringify(stats), 'determinePosition'
       new RSVP.Promise (resolve, reject)->
 
         determine = (data)->
@@ -136,8 +136,8 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
           buyPrice = stats.low
           if prices.buy
             buyPrice = prices.buy
-            if prices.buyBid >= stats.open
-             buyPrice = stats.low
+            # if prices.buy >= stats.open
+            #   buyPrice = stats.low
 
           bids = []
 

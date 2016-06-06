@@ -13,7 +13,7 @@ spreadPrice = (settings)->
 
     # Ensure a order meets minumum size
     # This is by design—meant to keep trading happening—and might be re-evaluated later
-    size = settings.btcSize if size < settings.btcSize
+    size = 0.01 if size < 0.01
 
     # the number of buys needed to satisfy the suggested btc order size
     buys = Math.floor size / settings.btcSize
@@ -22,6 +22,9 @@ spreadPrice = (settings)->
     # left over amounts needed to be added to fulfill cumulative order size
     remainder = size % settings.btcSize
     sizes[0] = sizes[0] + remainder if sizes[0]
+
+    # if size is less than minumum chunk size, ensure remainder is provided
+    sizes[0] = remainder unless sizes[0]
 
     # Create the orders
     mapIndexed = R.addIndex(R.map)
