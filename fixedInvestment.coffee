@@ -5,17 +5,19 @@
 # 2. use provided USD reserve to purchase more BTC to maintain that provided USD investment should the value fall
 # 3. recoup provided USD payout once the provided investment and reserve have returned to initial values
 
-
 R = require 'ramda'
 RSVP = require 'rsvp'
 # td = require 'throttle-debounce'
-acct = require 'accounting'
+# acct = require 'accounting'
 moment = require 'moment'
 
+# {pricing} = require './defaults'
 stream = require './stream'
 client = require './lib/coinbase-client'
 pricing = require './pricing'
-spreader = require './lib/spreadPrice'
+
+BuyStructure = require './lib/buyStructure'
+SellStructure = require './lib/sellStructure'
 
 matchCurrency = (currency)->
   (account)->
@@ -57,7 +59,7 @@ removeCurrentOrders = (orders)->
 
 
 holdoverQuestionableOrders = (uncertain)->
-  console.log 'holdoverQuestionableOrders', uncertain.length
+  # console.log 'holdoverQuestionableOrders', uncertain.length
   new RSVP.Promise (resolve, reject)->
     orders = uncertain
     resolve uncertain
@@ -66,13 +68,10 @@ holdoverQuestionableOrders = (uncertain)->
 
 fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 60)->
 
-  # Pricing/Purchase defaults
-  pricingOptionsDefaults =
-    btcSize: 0.01
-    usdOffset: 0.33
-    usdInterval: 0.99
+  # pricingSettings = R.mergeAll [ pricing, pricingOptions ]
 
-  pricingSettings = R.mergeAll [ pricingOptionsDefaults, pricingOptions ]
+  buyStructure = BuyStructure pricingOptions
+  sellStructure = SellStructure pricingOptions
 
 
   console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
@@ -122,7 +121,7 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
 
     # Determine your position
     determinePosition = (stats)->
-      console.log JSON.stringify stats, 'determinePosition'
+      console.log JSON.stringify(stats), 'determinePosition'
       new RSVP.Promise (resolve, reject)->
 
         determine = (data)->
@@ -137,34 +136,19 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
           buyPrice = stats.low
           if prices.buy
             buyPrice = prices.buy
-            #if prices.buyBid >= stats.open
-            #  buyPrice = stats.low
-
-          sell = btc.available * sellPrice
-          buy = btc.available * buyPrice
-
-          sellBTC = ( sell - investment ) / sellPrice
-          buyBTC = ( investment - buy ) / buyPrice
+            # if prices.buy >= stats.open
+            #   buyPrice = stats.low
 
           bids = []
 
-          if sellPrice and sellBTC > 0
-            gap = ( btc.available * sellPrice ) - investment
-            console.log "#{moment().format()} We'd want to sell #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(sellPrice)}/BTC, or #{pricing.btc(sellBTC)}BTC"
-            sellSpread = spreader pricingSettings.btcSize, pricingSettings.usdInterval, offset: pricingSettings.usdOffset
-            sideSell = (order)->
-              R.merge side: 'sell', order
+          sell = btc.available * sellPrice
+          sellBTC = ( sell - investment ) / sellPrice
+          bids.push sellStructure sellPrice, sellBTC if sellPrice and sellBTC > 0
 
-            bids.push R.map sideSell, sellSpread sellPrice, sellBTC
+          buy = btc.available * buyPrice
+          buyBTC = ( investment - buy ) / buyPrice
+          bids.push buyStructure buyPrice, buyBTC if buyPrice and buyBTC > 0
 
-          if buyPrice and buyBTC > 0
-            gap = investment - ( btc.available * buyPrice )
-            console.log "#{moment().format()} We'd want to buy #{acct.formatMoney(gap)} worth of BTC at #{acct.formatMoney(buyPrice)}/BTC, or #{pricing.btc(buyBTC)}BTC"
-            buySpread = spreader pricingSettings.btcSize, ( -1.0 * pricingSettings.usdInterval ), offset: ( -1.0 * pricingSettings.usdOffset )
-            sideBuy = (order)->
-              R.merge side: 'buy', order
-
-            bids.push R.map sideBuy, buySpread buyPrice, buyBTC
           resolve R.flatten bids
 
         client.getAccounts().then determine

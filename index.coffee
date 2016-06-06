@@ -1,11 +1,9 @@
 FixedInvestment = require './fixedInvestment'
 
-
 pricingOptions =
   btcSize: 0.025
-  usdOffset: 0.11
+  usdOffset: 0.22
   usdInterval: 0.33
-
 
 FixedInvestment 1000, 250, 5, pricingOptions, 3
 
