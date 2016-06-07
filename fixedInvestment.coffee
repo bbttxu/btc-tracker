@@ -7,13 +7,11 @@
 
 R = require 'ramda'
 RSVP = require 'rsvp'
-# td = require 'throttle-debounce'
-# acct = require 'accounting'
 moment = require 'moment'
 
-# {pricing} = require './defaults'
-stream = require './stream'
-client = require './lib/coinbase-client'
+stream = require './lib/stream'
+coinbaseClient = require './lib/coinbase-client'
+coinbasePublicClient = require './lib/coinbase-public-client'
 pricing = require './pricing'
 
 BuyStructure = require './lib/buyStructure'
@@ -23,64 +21,66 @@ matchCurrency = (currency)->
   (account)->
     account.currency is currency
 
-isUSD = matchCurrency 'USD'
-isBTC = matchCurrency 'BTC'
 
 orders = []
 
-getCurrentOrders = ->
-  # console.log 'getCurrentOrders', orders
-  new RSVP.Promise ( resolve, reject )->
-    resolve orders
 
 
-cancelPreviousOrders = (orders)->
-  # console.log 'cancelPreviousOrders', orders
-  new RSVP.Promise (resolve, reject)->
+fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOptions = {}, minutes = 60)->
 
-    onThen = (data)->
-      # console.log 'onThen', data
-      resolve data
-
-    onError = (data)->
-      reject data
-
-    RSVP.all( R.map client.cancelOrder, orders ).then( onThen ).catch( onError )
-
-
-removeCurrentOrders = (orders)->
-  # console.log 'removeCurrentOrders', orders
-  new RSVP.Promise ( resolve, reject )->
-
-    alreadyDone = (order)->
-      order.message is 'Order already done' or order.message is 'OK'
-
-    resolve R.pluck 'id', R.reject alreadyDone, orders
-
-
-holdoverQuestionableOrders = (uncertain)->
-  # console.log 'holdoverQuestionableOrders', uncertain.length
-  new RSVP.Promise (resolve, reject)->
-    orders = uncertain
-    resolve uncertain
-
-
-
-fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 60)->
-
-  # pricingSettings = R.mergeAll [ pricing, pricingOptions ]
+  productStream = stream(product)
+  client = coinbaseClient(product)
+  unauth = coinbasePublicClient product
 
   buyStructure = BuyStructure pricingOptions
   sellStructure = SellStructure pricingOptions
 
 
-  console.log "#{moment().format()} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
+  console.log "#{moment().format()} #{product} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
   prices = {}
   updatePrices = (data)->
     prices = R.merge prices, data
+    console.log prices
 
-  # openOrders = []
+  isProduct = matchCurrency product.split('-')[0]
+
+  getCurrentOrders = ->
+    # console.log 'getCurrentOrders', orders
+    new RSVP.Promise ( resolve, reject )->
+      resolve orders
+
+
+  cancelPreviousOrders = (orders)->
+    # console.log 'cancelPreviousOrders', orders
+    new RSVP.Promise (resolve, reject)->
+
+      onThen = (data)->
+        # console.log 'onThen', data
+        resolve data
+
+      onError = (data)->
+        reject data
+
+      RSVP.all( R.map client.cancelOrder, orders ).then( onThen ).catch( onError )
+
+
+  removeCurrentOrders = (orders)->
+    # console.log 'removeCurrentOrders', orders
+    new RSVP.Promise ( resolve, reject )->
+
+      alreadyDone = (order)->
+        order.message is 'Order already done' or order.message is 'OK'
+
+      resolve R.pluck 'id', R.reject alreadyDone, orders
+
+
+  holdoverQuestionableOrders = (uncertain)->
+    # console.log 'holdoverQuestionableOrders', uncertain.length
+    new RSVP.Promise (resolve, reject)->
+      orders = uncertain
+      resolve uncertain
+
 
   update = ->
     # Pay yourself
@@ -116,7 +116,7 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
         onCatch = (value)->
           reject value
 
-        client.stats().then(onThen).catch(onCatch)
+        unauth.stats().then(onThen).catch(onCatch)
 
 
     # Determine your position
@@ -126,7 +126,7 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
 
         determine = (data)->
           # console.log 'determine', data
-          btc = (R.filter isBTC, data)[0]
+          btc = (R.filter isProduct, data)[0]
 
           # sellPrice = prices.sellBid or stats.high
           sellPrice = stats.high
@@ -185,11 +185,10 @@ fixedInvestment = (investment, reserve, payout, pricingOptions = {}, minutes = 6
   setInterval update, 1000 * 60 * minutes
   update()
 
-  stream.on 'open', ->
-    stream.send JSON.stringify product_id: 'BTC-USD', type: 'subscribe'
+  # productStream.on 'open', ->
+  #   productStream.send JSON.stringify product_id: product, type: 'subscribe'
 
-  stream.on 'message', (data, flags) ->
-    json = JSON.parse data
+  productStream.on 'message', (json, flags) ->
     if json.type is 'match'
       price = parseFloat json.price
       obj = {}
