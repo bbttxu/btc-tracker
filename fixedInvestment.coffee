@@ -13,9 +13,12 @@ stream = require './lib/stream'
 coinbaseClient = require './lib/coinbase-client'
 coinbasePublicClient = require './lib/coinbase-public-client'
 pricing = require './pricing'
+logger = require './lib/logger'
 
 BuyStructure = require './lib/buyStructure'
 SellStructure = require './lib/sellStructure'
+
+ProcessFills = require './lib/saveFills'
 
 matchCurrency = (currency)->
   (account)->
@@ -31,17 +34,19 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
   productStream = stream(product)
   client = coinbaseClient(product)
   unauth = coinbasePublicClient product
+  processFills = ProcessFills product
+  log = logger product
 
   buyStructure = BuyStructure pricingOptions
   sellStructure = SellStructure pricingOptions
 
 
-  console.log "#{moment().format()} #{product} Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
+
+  log "Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
 
   prices = {}
   updatePrices = (data)->
     prices = R.merge prices, data
-    console.log prices
 
   isProduct = matchCurrency product.split('-')[0]
 
@@ -131,11 +136,13 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
           # sellPrice = prices.sellBid or stats.high
           sellPrice = stats.high
           if prices.sell
-            sellPrice = prices.sell
+            sellPrice = R.max stats.open, prices.sell
+            # if prices.sell < stats.open
+            #   sellPrice = stats.high
 
           buyPrice = stats.low
           if prices.buy
-            buyPrice = prices.buy
+            buyPrice = R.min stats.open, prices.buy
             # if prices.buy >= stats.open
             #   buyPrice = stats.low
 
@@ -185,8 +192,6 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
   setInterval update, 1000 * 60 * minutes
   update()
 
-  # productStream.on 'open', ->
-  #   productStream.send JSON.stringify product_id: product, type: 'subscribe'
 
   productStream.on 'message', (json, flags) ->
     if json.type is 'match'
@@ -195,13 +200,9 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
       obj[json.side] = price
       updatePrices obj
 
-    # if json.type is 'received'
-    #   if R.contains json.order_id, orders
-    #     console.log 'received', JSON.stringify json
-
     if json.type is 'filled'
       if R.contains json.order_id, orders
-        console.log 'filled', JSON.stringify json
-
+        log 'filled', JSON.stringify json
+        processFills()
 
 module.exports = fixedInvestment

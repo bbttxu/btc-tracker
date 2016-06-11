@@ -112,6 +112,8 @@ module.exports = (product_id)->
 
         resolve JSON.parse data.body
 
+  # console.log getFills
+
   functions =
     stats: stats
     getAccounts: getAccounts

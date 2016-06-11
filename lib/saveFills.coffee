@@ -4,10 +4,10 @@ acct = require 'accounting'
 moment = require 'moment'
 mongo = require('mongodb').MongoClient
 
-client = require './lib/coinbase-client'
-describe = require './lib/describeTrades'
-logger = require './lib/logger'
-notify = require './notification'
+client = require './coinbase-client'
+describe = require './describeTrades'
+logger = require './logger'
+notify = require '../notification'
 
 authed = undefined
 log = console.log
@@ -67,17 +67,18 @@ notifyOfUpdates = (updates)->
   details
 
 onDone = (data)->
+  # console.log data
   newUns = R.reject isTrue, data
   details = 'no updates'
   details = notifyOfUpdates(newUns) if newUns.length > 0
-  log 'notify:', details
+  log 'notify', details
 
 onError = (err)->
   log 'error', err
 
 
 logNewFills = ( data )->
-  log 'logNewFills', R.uniq R.pluck 'product_id', data
+  # log 'logNewFills', R.uniq R.pluck 'product_id', data
   checks = R.map saveFill, data
 
   RSVP.all(checks).then(onDone).catch(onError)
@@ -87,9 +88,10 @@ runScheduled = ->
   authed.getFills().then(logNewFills)
 
 
-module.exports = (product, hours)->
+module.exports = (product)->
   log = logger product
-  log "Update Fills every #{hours} hours"
   authed = client product
-  setInterval runScheduled, 1000 * 60 * 60 * hours
-  runScheduled()
+  # setInterval runScheduled, 1000 * 60 * 60 * hours
+  ()->
+    log "Save #{product} Fills"
+    runScheduled()
