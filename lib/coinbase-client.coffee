@@ -16,7 +16,7 @@ module.exports = (product_id)->
 
     # Ensure data is formatted properly
     order.price = pricing.usd order.price
-    order.size = pricing.btc order.size
+    order.size = pricing.btc order.size, 4
 
     order
 

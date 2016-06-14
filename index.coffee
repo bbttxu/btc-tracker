@@ -8,7 +8,7 @@ pricingOptions =
 # FixedInvestment 'BTC-USD', 1000, 250, 5, pricingOptions, 6
 
 ethPricingOptions =
-  btcSize: 1
+  btcSize: 1.00
   usdOffset: 0.02
   usdInterval: 0.05
 
