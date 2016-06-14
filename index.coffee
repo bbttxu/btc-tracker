@@ -2,17 +2,17 @@ FixedInvestment = require './fixedInvestment'
 
 pricingOptions =
   btcSize: 0.01
-  usdOffset: 0.11
-  usdInterval: 0.33
+  usdOffset: 0.33
+  usdInterval: 0.99
 
-FixedInvestment 'BTC-USD', 1000, 250, 5, pricingOptions, 6
+# FixedInvestment 'BTC-USD', 1000, 250, 5, pricingOptions, 6
 
 ethPricingOptions =
-  btcSize: 0.5
-  usdOffset: 0.01
-  usdInterval: 0.02
+  btcSize: 1
+  usdOffset: 0.02
+  usdInterval: 0.05
 
-FixedInvestment 'ETH-USD', 100, 250, 5, ethPricingOptions, 10
+FixedInvestment 'ETH-USD', 1000, 250, 5, ethPricingOptions, 6
 
 # Create Updates of recent trades
 # — save new trades to database for analysis

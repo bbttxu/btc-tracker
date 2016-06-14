@@ -13,7 +13,7 @@ spreadPrice = (settings)->
 
     # Ensure a order meets minumum size
     # This is by design—meant to keep trading happening—and might be re-evaluated later
-    size = 0.01 if size < 0.01
+    # size = 0.01 if size < 0.01
 
     # the number of buys needed to satisfy the suggested btc order size
     buys = Math.floor size / settings.btcSize

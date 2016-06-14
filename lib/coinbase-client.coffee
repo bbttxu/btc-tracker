@@ -103,9 +103,9 @@ module.exports = (product_id)->
 
       authedClient.cancelOrder order, callback
 
-  getFills = ->
+  getFills = (product = product_id)->
     new RSVP.Promise (resolve, reject)->
-      authedClient.getFills (err, data)->
+      authedClient.getFills {product_id: product}, (err, data)->
         if err
           data = JSON.parse err.body
           console.log 'err', data, order

@@ -4,4 +4,4 @@ module.exports = (product)->
   ()->
     meta = [ "#{moment().format()}", product ]
     args = Array.prototype.slice.call(arguments)
-    console.log meta.concat(args).join()
+    console.log meta.concat(args).join "\t"

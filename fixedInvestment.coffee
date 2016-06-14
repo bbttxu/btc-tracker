@@ -126,25 +126,18 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
 
     # Determine your position
     determinePosition = (stats)->
-      console.log JSON.stringify(stats), 'determinePosition'
+      log JSON.stringify(stats), 'determinePosition'
       new RSVP.Promise (resolve, reject)->
 
         determine = (data)->
           # console.log 'determine', data
           btc = (R.filter isProduct, data)[0]
 
-          # sellPrice = prices.sellBid or stats.high
           sellPrice = stats.high
-          if prices.sell
-            sellPrice = R.max stats.open, prices.sell
-            # if prices.sell < stats.open
-            #   sellPrice = stats.high
+          sellPrice = R.max stats.open, prices.sell if prices.sell
 
           buyPrice = stats.low
-          if prices.buy
-            buyPrice = R.min stats.open, prices.buy
-            # if prices.buy >= stats.open
-            #   buyPrice = stats.low
+          buyPrice = R.min stats.open, prices.buy if prices.buy
 
           bids = []
 
