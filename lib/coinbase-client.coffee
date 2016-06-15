@@ -35,7 +35,7 @@ module.exports = (product_id)->
     currency = product_id.split('-')[0]
     new RSVP.Promise (resolve, reject)->
       callback = (err, json)->
-        # console.log json
+        # console.log json.body
         if err
           data = JSON.parse err.body
           console.log 'err', data, order
@@ -55,22 +55,26 @@ module.exports = (product_id)->
   buy = ( order, callback )->
     authedClient.buy parcel(order), callback
 
-  # getOrders = ( callback )->
-  #   authedClient.getOrders callback
-
-  # withdraw = ( withdrawl, callback )->
-  #   authedClient.withdraw withdrawl, callback
-
   withdraw = ( withdrawl )->
-    # authedClient.withdraw withdrawl, callback
+    required =
+      coinbase_account_id: process.env.COINBASE_ACCOUNT_ID
+      type: 'withdrawl'
+
+    payload = R.mergeAll [withdrawl, required]
+
+    console.log 'withdraw', withdrawl
+
     new RSVP.Promise (resolve, reject)->
       callback = (err, json)->
+        console.log json.body
         reject err if err
         data = JSON.parse json.body
         console.log 'withdraw response', data
         resolve data
 
-      authedClient.withdraw withdrawl, callback
+
+      console.log 'withdrawl', payload
+      authedClient.withdraw payload, callback
 
   order = ( order )->
     new RSVP.Promise (resolve, reject)->
