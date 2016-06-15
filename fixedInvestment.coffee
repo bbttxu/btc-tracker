@@ -14,6 +14,7 @@ coinbaseClient = require './lib/coinbase-client'
 coinbasePublicClient = require './lib/coinbase-public-client'
 pricing = require './pricing'
 logger = require './lib/logger'
+notify = require './notification'
 
 BuyStructure = require './lib/buyStructure'
 SellStructure = require './lib/sellStructure'
@@ -98,16 +99,18 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
 
           take = account.balance - ( reserve + payout )
 
+          console.log take
 
           if take > 0
             withdrawl =
-              coinbase_account_id: account.id
-              amount: pricing.usd 1
+              amount: pricing.usd take
 
             asdf = client.withdraw( withdrawl )
 
             asdf.then (value)->
+              notify pricing.usd
               resolve bar
+
            else
              resolve 'stay poor'
 
