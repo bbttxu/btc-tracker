@@ -50,10 +50,14 @@ module.exports = (product_id)->
       authedClient.getAccounts callback
 
   sell = ( order, callback )->
-    authedClient.sell parcel(order), callback
+    payload = parcel order
+    # console.log payload
+    authedClient.sell payload, callback
 
   buy = ( order, callback )->
-    authedClient.buy parcel(order), callback
+    payload = parcel order
+    # console.log payload
+    authedClient.buy payload, callback
 
   withdraw = ( withdrawl )->
     required =
@@ -79,7 +83,10 @@ module.exports = (product_id)->
   order = ( order )->
     new RSVP.Promise (resolve, reject)->
       callback = (err, json)->
-        reject err if err
+        if err
+          console.log err
+          reject err
+
         data = JSON.parse json.body
         resolve data
 

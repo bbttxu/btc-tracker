@@ -26,11 +26,11 @@ matchCurrency = (currency)->
     account.currency is currency
 
 
-orders = []
 
 
 
 fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOptions = {}, minutes = 60)->
+  orders = []
 
   productStream = stream(product)
   client = coinbaseClient(product)
@@ -92,27 +92,29 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
     # Pay yourself
     payYourself = (bar)->
       new RSVP.Promise (resolve, reject)->
-        foo = client.getAccounts('USD')
+        # foo = client.getAccounts('USD')
 
-        foo.then (accounts)->
-          account = accounts[0]
+        # foo.then (accounts)->
+        #   # console.log accounts
+        #   account = accounts[0]
 
-          take = account.balance - ( reserve + payout )
+        #   take = account.balance - ( reserve + payout )
 
-          console.log take
+        #   # console.log account
+        #   # console.log account.balance, reserve, payout, (account.balance - ( reserve + payout ))
 
-          if take > 0
-            withdrawl =
-              amount: pricing.usd take
+        #   # if take > 0
+        #   #   withdrawl =
+        #   #     amount: pricing.usd take
 
-            asdf = client.withdraw( withdrawl )
+        #   #   asdf = client.withdraw( withdrawl )
 
-            asdf.then (value)->
-              notify pricing.usd
-              resolve bar
+        #   #   asdf.then (value)->
+        #   #     notify pricing.usd
+        #   #     resolve bar
 
-           else
-             resolve 'stay poor'
+        #   #  else
+        resolve 'stay poor'
 
     getStats = (bar)->
       # console.log 'getStats'
