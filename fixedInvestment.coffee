@@ -28,14 +28,16 @@ matchCurrency = (currency)->
 fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes = 60)->
   orders = []
 
+  pricingSettings = R.mergeAll [ {}, pricingOptions, { product: product } ]
+
   productStream = stream(product)
   client = coinbaseClient(product)
   unauth = coinbasePublicClient product
   processFills = ProcessFills product
   log = logger product
 
-  buyStructure = BuyStructure pricingOptions
-  sellStructure = SellStructure pricingOptions
+  buyStructure = BuyStructure pricingSettings
+  sellStructure = SellStructure pricingSettings
 
 
 
@@ -112,20 +114,29 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
           # console.log 'determine', data
           btc = (R.filter isProduct, data)[0]
 
+          volumeDiff = ( stats.volume * 30.0 ) / stats.volume_30day
+
+          volumeAdjustment = 1.0
+          if volumeDiff > 1.0
+            volumeAdjustment = volumeDiff
+            log "volume adjustment", volumeDiff
+
+
           sellPrice = stats.high
           sellPrice = R.max stats.open, prices.sell if prices.sell
 
           buyPrice = stats.low
           buyPrice = R.min stats.open, prices.buy if prices.buy
 
+
           bids = []
 
           sell = btc.available * sellPrice
-          sellBTC = ( sell - investment ) / sellPrice
+          sellBTC = ( ( sell - investment ) / sellPrice ) * volumeAdjustment
           bids.push sellStructure sellPrice, sellBTC if sellPrice and sellBTC > 0
 
           buy = btc.available * buyPrice
-          buyBTC = ( investment - buy ) / buyPrice
+          buyBTC = ( ( investment - buy ) / buyPrice ) * volumeAdjustment
           bids.push buyStructure buyPrice, buyBTC if buyPrice and buyBTC > 0
 
           resolve R.flatten bids
