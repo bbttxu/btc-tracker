@@ -1,9 +1,8 @@
 # fixedInvestment.coffee
 
 # The purpose of this script is to
-# 1. maintain X number of BTC valued at the provided USD investment
-# 2. use provided USD reserve to purchase more BTC to maintain that provided USD investment should the value fall
-# 3. recoup provided USD payout once the provided investment and reserve have returned to initial values
+# 1. maintain X number of product valued at the provided USD investment
+# 2. use available USD reserve to purchase more product to maintain that provided USD investment should the value fall
 
 R = require 'ramda'
 RSVP = require 'rsvp'
@@ -26,10 +25,7 @@ matchCurrency = (currency)->
     account.currency is currency
 
 
-
-
-
-fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOptions = {}, minutes = 60)->
+fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes = 60)->
   orders = []
 
   productStream = stream(product)
@@ -43,7 +39,7 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
 
 
 
-  log "Maintaining #{investment} with #{reserve} reserve and payouts at #{payout}"
+  log "Maintaining #{investment} in #{product}"
 
   prices = {}
   updatePrices = (data)->
@@ -92,28 +88,6 @@ fixedInvestment = (product = 'BTC-USD', investment, reserve, payout, pricingOpti
     # Pay yourself
     payYourself = (bar)->
       new RSVP.Promise (resolve, reject)->
-        # foo = client.getAccounts('USD')
-
-        # foo.then (accounts)->
-        #   # console.log accounts
-        #   account = accounts[0]
-
-        #   take = account.balance - ( reserve + payout )
-
-        #   # console.log account
-        #   # console.log account.balance, reserve, payout, (account.balance - ( reserve + payout ))
-
-        #   # if take > 0
-        #   #   withdrawl =
-        #   #     amount: pricing.usd take
-
-        #   #   asdf = client.withdraw( withdrawl )
-
-        #   #   asdf.then (value)->
-        #   #     notify pricing.usd
-        #   #     resolve bar
-
-        #   #  else
         resolve 'stay poor'
 
     getStats = (bar)->
