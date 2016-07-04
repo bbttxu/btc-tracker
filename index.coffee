@@ -24,7 +24,7 @@ UPDATE_EVERY_HOURS = 1
 Updates = require './saveFills'
 
 Updates 'BTC-USD', UPDATE_EVERY_HOURS
-# Updates 'ETH-USD', UPDATE_EVERY_HOURS
+Updates 'ETH-USD', UPDATE_EVERY_HOURS
 
 
 Daily = require('./daily')()
