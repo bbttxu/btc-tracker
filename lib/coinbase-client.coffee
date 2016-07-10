@@ -104,7 +104,10 @@ module.exports = (product_id)->
           data = JSON.parse err.body
           console.log 'err', data, order
 
+        reject failed: cancelOrder: order unless data.body
+
         obj = {}
+
         payload = data.body
         payload = (JSON.parse data.body).message unless payload is 'OK'
 
