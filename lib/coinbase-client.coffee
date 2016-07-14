@@ -41,6 +41,10 @@ module.exports = (product_id)->
           console.log 'err', data, order
           reject err
 
+        unless json.body
+          console.log 'getAccounts', json
+          reject json.body
+
         data = JSON.parse json.body
         filterCurrency = (account)->
           account.currency is currency
