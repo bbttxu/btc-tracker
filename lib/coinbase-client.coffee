@@ -89,7 +89,16 @@ module.exports = (product_id)->
       callback = (err, json)->
         if err
           console.log err
-          reject err
+          reject
+            err: err
+            json: json
+
+        unless json or json.body
+          console.log 'order', json
+          reject
+            err: err
+            json: json
+
 
         data = JSON.parse json.body
         resolve data

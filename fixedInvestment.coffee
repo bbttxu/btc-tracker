@@ -123,10 +123,16 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
 
           sellPrice = stats.high
-          sellPrice = R.max stats.open, prices.sell if prices.sell
+          # sellPrice = R.max stats.open, prices.sell if prices.sell
+          if prices.sell
+            mid = (stats.open + stats.low) / 2.0
+            sellPrice = R.max mid, prices.sell
 
           buyPrice = stats.low
-          buyPrice = R.min stats.open, prices.buy if prices.buy
+          # buyPrice = R.min stats.open, prices.buy if prices.buy
+          if prices.buy
+            mid = (stats.open + stats.high) / 2.0
+            buyPrice = R.min mid, prices.buy
 
 
           bids = []

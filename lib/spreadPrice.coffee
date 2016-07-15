@@ -13,7 +13,7 @@ spreadPrice = (settings)->
 
     # Ensure a order meets minumum size
     # This is by design—meant to keep trading happening—and might be re-evaluated later
-    # size = settings.minimumSize if size < settings.minimumSize
+    size = settings.minimumSize if size < settings.minimumSize
 
     # the number of buys needed to satisfy the suggested btc order size
     buys = Math.floor size / settings.btcSize
@@ -35,7 +35,7 @@ spreadPrice = (settings)->
         size: pricing.btc orderSize
         side: settings.side
 
-    mapIndexed getPrices, sizes
+    mapIndexed getPrices, R.reverse sizes
 
 
 module.exports = spreadPrice
