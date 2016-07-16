@@ -50,13 +50,13 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
   isProduct = matchCurrency product.split('-')[0]
 
   getCurrentOrders = ->
-    # console.log 'getCurrentOrders', orders
+    console.log 'getCurrentOrders', orders
     new RSVP.Promise ( resolve, reject )->
       resolve orders
 
 
   cancelPreviousOrders = (orders)->
-    # console.log 'cancelPreviousOrders', orders
+    console.log 'cancelPreviousOrders', orders
     new RSVP.Promise (resolve, reject)->
 
       onThen = (data)->
@@ -70,17 +70,17 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
 
   removeCurrentOrders = (orders)->
-    # console.log 'removeCurrentOrders', orders
+    console.log 'removeCurrentOrders', orders
     new RSVP.Promise ( resolve, reject )->
 
       alreadyDone = (order)->
-        order.message is 'Order already done' or order.message is 'OK'
+        order.message is 'Order already done' or order.message is 'NotFound' or order.message is 'OK'
 
       resolve R.pluck 'id', R.reject alreadyDone, orders
 
 
   holdoverQuestionableOrders = (uncertain)->
-    # console.log 'holdoverQuestionableOrders', uncertain.length
+    console.log 'holdoverQuestionableOrders', uncertain.length
     new RSVP.Promise (resolve, reject)->
       orders = uncertain
       resolve uncertain
@@ -125,13 +125,21 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
           sellPrice = stats.high
           # sellPrice = R.max stats.open, prices.sell if prices.sell
           if prices.sell
-            mid = (stats.open + stats.low) / 2.0
+            # FIXME TODO create average value function
+            open = parseFloat stats.open
+            low = parseFloat stats.low
+            mid = pricing.usd((open + low) / 2.0)
+            # console.log mid, open, low, prices.sell, 'sell'
             sellPrice = R.max mid, prices.sell
 
           buyPrice = stats.low
           # buyPrice = R.min stats.open, prices.buy if prices.buy
           if prices.buy
-            mid = (stats.open + stats.high) / 2.0
+            # FIXME TODO create average value function
+            open = parseFloat stats.open
+            high = parseFloat stats.high
+            mid = pricing.usd((open + high) / 2.0)
+            # console.log mid, open, high, prices.buy, 'buy'
             buyPrice = R.min mid, prices.buy
 
 
@@ -172,7 +180,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
       .then(cancelPreviousOrders)
       .then(removeCurrentOrders)
       .then(holdoverQuestionableOrders)
-      .then(payYourself)
+      # .then(payYourself)
       .then(getStats)
       .then(determinePosition)
       .then(placeNewOrders)

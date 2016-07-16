@@ -49,7 +49,7 @@ showProgress = ->
     console.log message
 
 module.exports = ->
-  showProgress()
+  # showProgress()
   setInterval showProgress, 1000 * 60 * 60 * 24
 
 
