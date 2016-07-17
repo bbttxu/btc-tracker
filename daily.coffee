@@ -50,6 +50,7 @@ showProgress = ->
 
 module.exports = ->
   # showProgress()
-  setInterval showProgress, 1000 * 60 * 60 * 24
+  setTimeout showProgress, 1000 * 60 * 5
+  setInterval showProgress, 1000 * 60 * 60 * 23
 
 

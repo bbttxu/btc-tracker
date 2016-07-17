@@ -50,13 +50,13 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
   isProduct = matchCurrency product.split('-')[0]
 
   getCurrentOrders = ->
-    console.log 'getCurrentOrders', orders
+    # console.log 'getCurrentOrders', orders
     new RSVP.Promise ( resolve, reject )->
       resolve orders
 
 
   cancelPreviousOrders = (orders)->
-    console.log 'cancelPreviousOrders', orders
+    # console.log 'cancelPreviousOrders', orders
     new RSVP.Promise (resolve, reject)->
 
       onThen = (data)->
@@ -70,7 +70,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
 
   removeCurrentOrders = (orders)->
-    console.log 'removeCurrentOrders', orders
+    # console.log 'removeCurrentOrders', orders
     new RSVP.Promise ( resolve, reject )->
 
       alreadyDone = (order)->
@@ -80,7 +80,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
 
   holdoverQuestionableOrders = (uncertain)->
-    console.log 'holdoverQuestionableOrders', uncertain.length
+    # console.log 'holdoverQuestionableOrders', uncertain.length
     new RSVP.Promise (resolve, reject)->
       orders = uncertain
       resolve uncertain
@@ -157,15 +157,30 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
         client.getAccounts().then determine
 
+    prioritizeNewOrders = (data)->
+      # console.log 'prioritizeNewOrders', data
+
+      getPrice = (order)->
+        parseFloat(order.price) * parseFloat(order.size)
+
+      sortByLowPrice = (a, b)->
+        getPrice(a) - getPrice(b)
+
+      new RSVP.Promise (resolve, reject)->
+        resolve R.sort sortByLowPrice, data
+
+
     # Execute new Position
     placeNewOrders = (data)->
       # console.log data, 'placeNewOrders'
       new RSVP.Promise (resolve, reject)->
-        makeOrder = (order)->
-          client.order order
 
+        mapIndexed = R.addIndex R.map
 
-        newOrders = R.map makeOrder, R.flatten data
+        makeOrder = (order, index)->
+          client.delayedOrder(order, (index * 100))
+
+        newOrders = mapIndexed makeOrder, R.flatten data
 
         RSVP.allSettled(newOrders).then (result)->
           fulfilled = R.pluck 'value', R.filter R.propEq('state', 'fulfilled'), result
@@ -183,6 +198,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
       # .then(payYourself)
       .then(getStats)
       .then(determinePosition)
+      .then(prioritizeNewOrders)
       .then(placeNewOrders)
       .catch(onError)
 

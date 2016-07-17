@@ -109,6 +109,21 @@ module.exports = (product_id)->
       if order.side is 'sell'
         sell order, callback
 
+  delayedOrder = (payload, timeout)->
+    new RSVP.Promise (resolve, reject)->
+
+      onGood = (data)->
+        resolve data
+
+      onBad = (data)->
+        reject data
+
+      makeOrder = ->
+        # console.log payload
+        order(payload).then(onGood).catch(onBad)
+
+      setTimeout makeOrder, timeout
+
 
   cancelOrder = ( order )->
     new RSVP.Promise (resolve, reject)->
@@ -121,8 +136,10 @@ module.exports = (product_id)->
 
         obj = {}
 
-        payload = data.body
+        payload = JSON.parse data.body
         payload = (JSON.parse data.body).message unless payload is 'OK'
+        # payload = 'Found' if order is data.body[0]
+        # console.log 'check', order, data.body[0]
 
         obj.id = order
         obj.message = payload
@@ -150,4 +167,5 @@ module.exports = (product_id)->
     withdraw: withdraw
     cancelOrder: cancelOrder
     order: order
+    delayedOrder: delayedOrder
     getFills: getFills
