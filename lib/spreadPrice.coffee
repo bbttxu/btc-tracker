@@ -1,6 +1,7 @@
 R = require 'ramda'
 acct = require 'accounting'
 moment = require 'moment'
+fib = require 'fib'
 
 pricing = require '../pricing'
 
@@ -29,7 +30,7 @@ spreadPrice = (settings)->
     # Create the orders
     mapIndexed = R.addIndex(R.map)
     getPrices = (orderSize, index)->
-      orderPrice = ( parseFloat(price) + parseFloat(settings.usdOffset) ) + ( ( index ) * settings.usdInterval )
+      orderPrice = ( parseFloat(price) + parseFloat(settings.usdOffset) ) + ( fib( index, 1 ) * settings.usdInterval )
       order =
         price: pricing.usd orderPrice
         size: pricing.btc orderSize

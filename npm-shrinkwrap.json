@@ -298,6 +298,11 @@
       "from": "extsprintf@1.0.2",
       "resolved": "https://registry.npmjs.org/extsprintf/-/extsprintf-1.0.2.tgz"
     },
+    "fib": {
+      "version": "0.0.1",
+      "from": "fib@latest",
+      "resolved": "https://registry.npmjs.org/fib/-/fib-0.0.1.tgz"
+    },
     "forever-agent": {
       "version": "0.6.1",
       "from": "forever-agent@>=0.6.1 <0.7.0",

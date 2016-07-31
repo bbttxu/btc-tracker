@@ -88,7 +88,13 @@ module.exports = (product_id)->
     new RSVP.Promise (resolve, reject)->
       callback = (err, json)->
         if err
-          console.log err
+          console.log 'error starts here'
+          console.log
+            err: err
+            json: json
+
+          console.log 'error ends here'
+
           reject
             err: err
             json: json
@@ -129,8 +135,8 @@ module.exports = (product_id)->
     new RSVP.Promise (resolve, reject)->
       callback = (err, data)->
         if err
-          data = JSON.parse err.body
-          console.log 'err', data, order
+          # data = JSON.parse err.body
+          console.log 'err', err, order
 
         reject failed: cancelOrder: order unless data.body
 
@@ -143,9 +149,27 @@ module.exports = (product_id)->
 
         obj.id = order
         obj.message = payload
+
         resolve obj
 
       authedClient.cancelOrder order, callback
+
+  delayedCancel = (payload, timeout)->
+    new RSVP.Promise (resolve, reject)->
+
+      onGood = (data)->
+        resolve data
+
+      onBad = (data)->
+        reject data
+
+      curryCancelOrder = ->
+        # console.log payload
+        cancelOrder(payload).then(onGood).catch(onBad)
+
+      setTimeout curryCancelOrder, timeout
+
+
 
   getFills = (product = product_id)->
     new RSVP.Promise (resolve, reject)->
@@ -166,6 +190,7 @@ module.exports = (product_id)->
     # orders: getOrders
     withdraw: withdraw
     cancelOrder: cancelOrder
+    delayedCancel: delayedCancel
     order: order
     delayedOrder: delayedOrder
     getFills: getFills

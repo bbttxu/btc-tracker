@@ -59,6 +59,15 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
     # console.log 'cancelPreviousOrders', orders
     new RSVP.Promise (resolve, reject)->
 
+
+      mapIndexed = R.addIndex R.map
+
+      delayedCancelOrder = (order, index)->
+        client.delayedCancel(order, (index * 100))
+
+      cancellations = mapIndexed delayedCancelOrder, orders
+
+
       onThen = (data)->
         # console.log 'onThen', data
         resolve data
@@ -66,7 +75,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
       onError = (data)->
         reject data
 
-      RSVP.all( R.map client.cancelOrder, orders ).then( onThen ).catch( onError )
+      RSVP.all( cancellations ).then( onThen ).catch( onError )
 
 
   removeCurrentOrders = (orders)->
@@ -128,9 +137,9 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
             # FIXME TODO create average value function
             open = parseFloat stats.open
             low = parseFloat stats.low
-            mid = pricing.usd((open + low) / 2.0)
-            # console.log mid, open, low, prices.sell, 'sell'
-            sellPrice = R.max mid, prices.sell
+            mid = (open + low) / 2.0
+            # console.log '(', open, '+', low, ') / 2.0 =', mid, 'vs', prices.sell, 'sell', product
+            sellPrice = pricing.usd R.max mid, prices.sell
 
           buyPrice = stats.low
           # buyPrice = R.min stats.open, prices.buy if prices.buy
@@ -138,9 +147,9 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
             # FIXME TODO create average value function
             open = parseFloat stats.open
             high = parseFloat stats.high
-            mid = pricing.usd((open + high) / 2.0)
-            # console.log mid, open, high, prices.buy, 'buy'
-            buyPrice = R.min mid, prices.buy
+            mid = (open + high) / 2.0
+            # console.log '(', open, '+', high, ') / 2.0 =', mid, 'vs', prices.buy, 'buy', product
+            buyPrice = pricing.usd R.min mid, prices.buy
 
 
           bids = []
