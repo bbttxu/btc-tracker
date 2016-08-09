@@ -2,7 +2,7 @@ config = require './config'
 
 FixedInvestment = require './fixedInvestment'
 
-FixedInvestment 'BTC-USD', 1000, config.pricingOptions, 2.5
+FixedInvestment 'BTC-USD', 1500, config.pricingOptions, 2.5
 FixedInvestment 'ETH-USD', 1000, config.ethPricingOptions, 2.5
 
 # Create Updates of recent trades
