@@ -59,6 +59,15 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
     # console.log 'cancelPreviousOrders', orders
     new RSVP.Promise (resolve, reject)->
 
+
+      mapIndexed = R.addIndex R.map
+
+      delayedCancelOrder = (order, index)->
+        client.delayedCancel(order, (index * 100))
+
+      cancellations = mapIndexed delayedCancelOrder, orders
+
+
       onThen = (data)->
         # console.log 'onThen', data
         resolve data
@@ -66,7 +75,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
       onError = (data)->
         reject data
 
-      RSVP.all( R.map client.cancelOrder, orders ).then( onThen ).catch( onError )
+      RSVP.all( cancellations ).then( onThen ).catch( onError )
 
 
   removeCurrentOrders = (orders)->
@@ -74,7 +83,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
     new RSVP.Promise ( resolve, reject )->
 
       alreadyDone = (order)->
-        order.message is 'Order already done' or order.message is 'OK'
+        order.message is 'Order already done' or order.message is 'NotFound' or order.message is 'OK'
 
       resolve R.pluck 'id', R.reject alreadyDone, orders
 
@@ -123,10 +132,24 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
 
           sellPrice = stats.high
-          sellPrice = R.max stats.open, prices.sell if prices.sell
+          # sellPrice = R.max stats.open, prices.sell if prices.sell
+          if prices.sell
+            # FIXME TODO create average value function
+            open = parseFloat stats.open
+            low = parseFloat stats.low
+            mid = (open + low) / 2.0
+            # console.log '(', open, '+', low, ') / 2.0 =', mid, 'vs', prices.sell, 'sell', product
+            sellPrice = pricing.usd R.max mid, prices.sell
 
           buyPrice = stats.low
-          buyPrice = R.min stats.open, prices.buy if prices.buy
+          # buyPrice = R.min stats.open, prices.buy if prices.buy
+          if prices.buy
+            # FIXME TODO create average value function
+            open = parseFloat stats.open
+            high = parseFloat stats.high
+            mid = (open + high) / 2.0
+            # console.log '(', open, '+', high, ') / 2.0 =', mid, 'vs', prices.buy, 'buy', product
+            buyPrice = pricing.usd R.min mid, prices.buy
 
 
           bids = []
@@ -143,15 +166,30 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
         client.getAccounts().then determine
 
+    prioritizeNewOrders = (data)->
+      # console.log 'prioritizeNewOrders', data
+
+      getPrice = (order)->
+        parseFloat(order.price) * parseFloat(order.size)
+
+      sortByLowPrice = (a, b)->
+        getPrice(a) - getPrice(b)
+
+      new RSVP.Promise (resolve, reject)->
+        resolve R.sort sortByLowPrice, data
+
+
     # Execute new Position
     placeNewOrders = (data)->
       # console.log data, 'placeNewOrders'
       new RSVP.Promise (resolve, reject)->
-        makeOrder = (order)->
-          client.order order
 
+        mapIndexed = R.addIndex R.map
 
-        newOrders = R.map makeOrder, R.flatten data
+        makeOrder = (order, index)->
+          client.delayedOrder(order, (index * 100))
+
+        newOrders = mapIndexed makeOrder, R.flatten data
 
         RSVP.allSettled(newOrders).then (result)->
           fulfilled = R.pluck 'value', R.filter R.propEq('state', 'fulfilled'), result
@@ -166,9 +204,10 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
       .then(cancelPreviousOrders)
       .then(removeCurrentOrders)
       .then(holdoverQuestionableOrders)
-      .then(payYourself)
+      # .then(payYourself)
       .then(getStats)
       .then(determinePosition)
+      .then(prioritizeNewOrders)
       .then(placeNewOrders)
       .catch(onError)
 

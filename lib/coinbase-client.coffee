@@ -41,6 +41,10 @@ module.exports = (product_id)->
           console.log 'err', data, order
           reject err
 
+        unless json.body
+          console.log 'getAccounts', json
+          reject json.body
+
         data = JSON.parse json.body
         filterCurrency = (account)->
           account.currency is currency
@@ -84,8 +88,23 @@ module.exports = (product_id)->
     new RSVP.Promise (resolve, reject)->
       callback = (err, json)->
         if err
-          console.log err
-          reject err
+          console.log 'error starts here'
+          console.log
+            err: err
+            json: json
+
+          console.log 'error ends here'
+
+          reject
+            err: err
+            json: json
+
+        unless json or json.body
+          console.log 'order', json
+          reject
+            err: err
+            json: json
+
 
         data = JSON.parse json.body
         resolve data
@@ -96,26 +115,61 @@ module.exports = (product_id)->
       if order.side is 'sell'
         sell order, callback
 
+  delayedOrder = (payload, timeout)->
+    new RSVP.Promise (resolve, reject)->
+
+      onGood = (data)->
+        resolve data
+
+      onBad = (data)->
+        reject data
+
+      makeOrder = ->
+        # console.log payload
+        order(payload).then(onGood).catch(onBad)
+
+      setTimeout makeOrder, timeout
+
 
   cancelOrder = ( order )->
     new RSVP.Promise (resolve, reject)->
       callback = (err, data)->
         if err
-          data = JSON.parse err.body
-          console.log 'err', data, order
+          # data = JSON.parse err.body
+          console.log 'err', err, order
 
         reject failed: cancelOrder: order unless data.body
 
         obj = {}
 
-        payload = data.body
+        payload = JSON.parse data.body
         payload = (JSON.parse data.body).message unless payload is 'OK'
+        # payload = 'Found' if order is data.body[0]
+        # console.log 'check', order, data.body[0]
 
         obj.id = order
         obj.message = payload
+
         resolve obj
 
       authedClient.cancelOrder order, callback
+
+  delayedCancel = (payload, timeout)->
+    new RSVP.Promise (resolve, reject)->
+
+      onGood = (data)->
+        resolve data
+
+      onBad = (data)->
+        reject data
+
+      curryCancelOrder = ->
+        # console.log payload
+        cancelOrder(payload).then(onGood).catch(onBad)
+
+      setTimeout curryCancelOrder, timeout
+
+
 
   getFills = (product = product_id)->
     new RSVP.Promise (resolve, reject)->
@@ -136,5 +190,7 @@ module.exports = (product_id)->
     # orders: getOrders
     withdraw: withdraw
     cancelOrder: cancelOrder
+    delayedCancel: delayedCancel
     order: order
+    delayedOrder: delayedOrder
     getFills: getFills

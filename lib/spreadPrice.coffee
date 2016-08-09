@@ -1,6 +1,7 @@
 R = require 'ramda'
 acct = require 'accounting'
 moment = require 'moment'
+fib = require 'fib'
 
 pricing = require '../pricing'
 
@@ -13,7 +14,7 @@ spreadPrice = (settings)->
 
     # Ensure a order meets minumum size
     # This is by design—meant to keep trading happening—and might be re-evaluated later
-    # size = settings.minimumSize if size < settings.minimumSize
+    size = settings.minimumSize if size < settings.minimumSize
 
     # the number of buys needed to satisfy the suggested btc order size
     buys = Math.floor size / settings.btcSize
@@ -29,13 +30,13 @@ spreadPrice = (settings)->
     # Create the orders
     mapIndexed = R.addIndex(R.map)
     getPrices = (orderSize, index)->
-      orderPrice = ( parseFloat(price) + parseFloat(settings.usdOffset) ) + ( ( index ) * settings.usdInterval )
+      orderPrice = ( parseFloat(price) + parseFloat(settings.usdOffset) ) + ( fib( index, 1 ) * settings.usdInterval )
       order =
         price: pricing.usd orderPrice
         size: pricing.btc orderSize
         side: settings.side
 
-    mapIndexed getPrices, sizes
+    mapIndexed getPrices, R.reverse sizes
 
 
 module.exports = spreadPrice
