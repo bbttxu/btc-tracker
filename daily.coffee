@@ -43,7 +43,7 @@ productValueOverTime = (product)->
 
 
 showProgress = ->
-  RSVP.all( R.map productValueOverTime, ['BTC-USD', 'ETH-USD'] ).then (lol)->
+  RSVP.all( R.map productValueOverTime, ['BTC-USD', 'ETH-USD', 'LTC-USD'] ).then (lol)->
     message = lol.join("\n")
     notify message
     console.log message

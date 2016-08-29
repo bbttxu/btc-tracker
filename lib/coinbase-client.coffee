@@ -92,19 +92,21 @@ module.exports = (product_id)->
           console.log
             err: err
             json: json
+            order: order
 
           console.log 'error ends here'
 
           reject
             err: err
             json: json
+            order: order
 
-        unless json or json.body
+        unless json
           console.log 'order', json
           reject
             err: err
             json: json
-
+            order: order
 
         data = JSON.parse json.body
         resolve data
@@ -138,7 +140,9 @@ module.exports = (product_id)->
           # data = JSON.parse err.body
           console.log 'err', err, order
 
-        reject failed: cancelOrder: order unless data.body
+        unless data
+          console.log 'failed cancel, data:', data
+          reject failed: cancelOrder: order
 
         obj = {}
 
@@ -182,6 +186,13 @@ module.exports = (product_id)->
 
   # console.log getFills
 
+  cancelOrders = ->
+    new RSVP.Promise (resolve, reject)->
+      authedClient.cancelOrders (data)->
+        console.log data
+        resolve data
+
+
   functions =
     stats: stats
     getAccounts: getAccounts
@@ -194,3 +205,4 @@ module.exports = (product_id)->
     order: order
     delayedOrder: delayedOrder
     getFills: getFills
+    cancelOrders: cancelOrders

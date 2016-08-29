@@ -2,8 +2,9 @@ config = require './config'
 
 FixedInvestment = require './fixedInvestment'
 
-FixedInvestment 'BTC-USD', 1500, config.pricingOptions, 2.5
-FixedInvestment 'ETH-USD', 1000, config.ethPricingOptions, 2.5
+FixedInvestment 'BTC-USD', 1500, config.pricingOptions, 5
+FixedInvestment 'ETH-USD', 1000, config.ethPricingOptions, 5
+FixedInvestment 'LTC-USD', 200, config.ltcPricingOptions, 5
 
 # Create Updates of recent trades
 # — save new trades to database for analysis
@@ -14,6 +15,7 @@ Updates = require './saveFills'
 
 Updates 'BTC-USD', UPDATE_EVERY_HOURS
 Updates 'ETH-USD', UPDATE_EVERY_HOURS
+Updates 'LTC-USD', UPDATE_EVERY_HOURS
 
 
 Daily = require('./daily')()
