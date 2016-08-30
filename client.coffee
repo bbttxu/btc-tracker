@@ -1,4 +1,4 @@
-require('dotenv').load()
+require('dotenv').config({silent: true})
 R = require 'ramda'
 CoinbaseExchange = require 'coinbase-exchange'
 

@@ -191,7 +191,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
         newOrders = mapIndexed makeOrder, R.flatten data
 
-        RSVP.allSettled(newOrders).then (result)->
+        RSVP.all(newOrders).then (result)->
           fulfilled = R.pluck 'value', R.filter R.propEq('state', 'fulfilled'), result
           orders = orders.concat R.reject R.isNil, R.pluck 'id', fulfilled
           resolve orders

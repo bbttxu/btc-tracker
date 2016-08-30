@@ -1,4 +1,4 @@
-require('dotenv').load()
+require('dotenv').config({silent: true})
 R = require 'ramda'
 RSVP = require 'rsvp'
 CoinbaseExchange = require 'coinbase-exchange'
@@ -121,9 +121,11 @@ module.exports = (product_id)->
     new RSVP.Promise (resolve, reject)->
 
       onGood = (data)->
+        # console.log 'onGood', data
         resolve data
 
       onBad = (data)->
+        console.log 'onBad', data
         reject data
 
       makeOrder = ->
