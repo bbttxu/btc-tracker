@@ -89,10 +89,10 @@ module.exports = (product_id)->
       callback = (err, json)->
         if err
           console.log 'error starts here'
-          console.log
-            err: err
-            json: json
-            order: order
+          # console.log
+          #   err: err
+          #   json: json
+          #   order: order
 
           console.log 'error ends here'
 
@@ -101,15 +101,16 @@ module.exports = (product_id)->
             json: json
             order: order
 
-        unless json
-          console.log 'order', json
-          reject
-            err: err
-            json: json
-            order: order
+        if json and json.body
 
-        data = JSON.parse json.body
-        resolve data
+          data = JSON.parse json.body
+          resolve data
+
+        # console.log 'order', json
+        reject
+          err: err
+          json: json
+          order: order
 
       if order.side is 'buy'
         buy order, callback

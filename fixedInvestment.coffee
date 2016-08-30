@@ -9,6 +9,7 @@ RSVP = require 'rsvp'
 moment = require 'moment'
 
 stream = require './lib/stream'
+gdax = require './lib/gdax-client'
 coinbaseClient = require './lib/coinbase-client'
 coinbasePublicClient = require './lib/coinbase-public-client'
 pricing = require './pricing'
@@ -200,7 +201,9 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
     onError = (error)->
       console.log 'onError', error
 
+
     getCurrentOrders()
+      .then(gdax.cancelAllOrders( [ product ] ) )
       .then(cancelPreviousOrders)
       .then(removeCurrentOrders)
       .then(holdoverQuestionableOrders)
