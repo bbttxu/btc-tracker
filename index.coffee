@@ -1,13 +1,12 @@
 config = require './config'
 
-UPDATE_MINS = 0.5
-
+UPDATE_MINS = 2.5
 
 FixedInvestment = require './fixedInvestment'
 
 FixedInvestment 'BTC-USD', 1500, config.pricingOptions, UPDATE_MINS
 FixedInvestment 'ETH-USD', 1000, config.ethPricingOptions, UPDATE_MINS
-FixedInvestment 'LTC-USD', 200, config.ltcPricingOptions, UPDATE_MINS
+FixedInvestment 'LTC-USD', 0, config.ltcPricingOptions, UPDATE_MINS
 
 # Create Updates of recent trades
 # — save new trades to database for analysis

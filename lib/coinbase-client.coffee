@@ -7,6 +7,8 @@ pricing = require '../pricing'
 
 authedClient = new CoinbaseExchange.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
 
+INTERVAL = 1000
+
 module.exports = (product_id)->
   parcel = (options)->
     defaults =
@@ -118,7 +120,7 @@ module.exports = (product_id)->
       if order.side is 'sell'
         sell order, callback
 
-  delayedOrder = (payload, timeout)->
+  delayedOrder = (payload, index = 0)->
     new RSVP.Promise (resolve, reject)->
 
       onGood = (data)->
@@ -133,7 +135,7 @@ module.exports = (product_id)->
         # console.log payload
         order(payload).then(onGood).catch(onBad)
 
-      setTimeout makeOrder, timeout
+      setTimeout makeOrder, ( index * INTERVAL )
 
 
   cancelOrder = ( order )->
@@ -161,7 +163,7 @@ module.exports = (product_id)->
 
       authedClient.cancelOrder order, callback
 
-  delayedCancel = (payload, timeout)->
+  delayedCancel = (payload, index)->
     new RSVP.Promise (resolve, reject)->
 
       onGood = (data)->
@@ -174,7 +176,7 @@ module.exports = (product_id)->
         # console.log payload
         cancelOrder(payload).then(onGood).catch(onBad)
 
-      setTimeout curryCancelOrder, timeout
+      setTimeout curryCancelOrder, ( index * INTERVAL )
 
 
 
