@@ -1,12 +1,14 @@
 
 initialState =
-  market: {}
+  prices: {}
 
 todoApp = (state, action) ->
 
   if action.type is 'ORDER_MATCHED'
-    state.market = {} unless state.market
-    state.market[action.match.side] = action.match.price
+    order = action.match
+
+    state.prices[order.product_id] = {} unless state.prices[order.product_id]
+    state.prices[order.product_id][order.side] = order.price
 
   if action.type is 'REQUEST_STATS'
     console.log action
