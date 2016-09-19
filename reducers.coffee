@@ -1,6 +1,10 @@
+R = require 'ramda'
+
+regression = require 'regression'
 
 initialState =
   prices: {}
+  stats: {}
 
 todoApp = (state, action) ->
 
@@ -11,15 +15,21 @@ todoApp = (state, action) ->
     state.prices[order.product_id][order.side] = order.price
 
   if action.type is 'REQUEST_STATS'
-    console.log action
+    console.log action.stats
 
   if action.type is 'UPDATE_STATS'
-    console.log action
+    state.stats = R.mergeAll [ state.stats, action.stats ]
 
   if typeof state == 'undefined'
     return initialState
 
-  # console.log state
+
+  foo = ( value, key )->
+    regress = regression 'linear', [ [ 0, parseFloat(value.open) ], [ ( 24 * 60 * 60 ), parseFloat( value.last ) ] ]
+    regress.equation[0]
+
+  state.trends = R.mapObjIndexed foo, state.stats
+
   state
 
 module.exports = todoApp

@@ -4,8 +4,9 @@ thunk = require 'redux-thunk'
 
 R = require 'ramda'
 
+gdax = require './lib/gdax-client'
 
-{ORDER_MATCHED, fetchStats} = require './actions'
+{ORDER_MATCHED, UPDATE_STATS} = require './actions'
 
 reducers = require './reducers'
 
@@ -17,8 +18,7 @@ store.subscribe (foo)->
 Stream = require './lib/stream'
 
 
-
-currencies = ['BTC-USD', 'LTC-USD', 'ETH-USD', 'BTC-ETH']
+currencies = ['BTC-USD', 'ETH-USD', 'ETH-BTC']
 
 currencyStream = (product)->
   stream = Stream product
@@ -31,6 +31,23 @@ currencyStream = (product)->
 
 
 R.map currencyStream, currencies
+
+onThen = (data)->
+  dispatchStats = (stats)->
+    store.dispatch
+      type: UPDATE_STATS
+      stats: stats
+
+  R.map dispatchStats, data
+
+onError = (data)->
+  console.log 'onError', data
+
+updateStats = ->
+  gdax.stats( currencies ).then( onThen ).catch( onError )
+
+updateStats()
+setInterval updateStats, 60 * 1000
 
 # store.dispatch fetchStats 'BTC-USD'
     # console.log ORDER_MATCHED, foo
