@@ -13,12 +13,12 @@ reducers = require './reducers'
 store = createStore reducers, applyMiddleware(thunk.default)
 
 store.subscribe (foo)->
-  console.log store.getState()
+  console.log new Date(), store.getState()
 
 Stream = require './lib/stream'
 
 
-currencies = ['BTC-USD', 'ETH-USD', 'ETH-BTC']
+currencies = ['BTC-USD', 'ETH-USD', 'ETH-BTC', 'LTC-USD', 'LTC-BTC' ]
 
 currencyStream = (product)->
   stream = Stream product

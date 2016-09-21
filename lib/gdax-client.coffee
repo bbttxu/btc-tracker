@@ -27,25 +27,26 @@ cancelAllOrders = ( currencies = [] )->
     RSVP.allSettled( cancelAllCurrencyOrders ).then( resolveIssues ).catch( rejectPromise )
 
 
+getProduct24HrStats = ( product )->
+  new RSVP.Promise (resolve, reject)->
+    publicClient = new Gdax.PublicClient product
+
+    callback = (err, json)->
+      if err
+        reject err
+
+      obj = {}
+      obj[ product ] = JSON.parse json.body
+
+      resolve obj
+
+    publicClient.getProduct24HrStats callback
+
+
 stats = ( currencies = [] )->
   new RSVP.Promise ( resolve, reject )->
-    currencyStats = ( currency )->
-      new RSVP.Promise (resolve, reject)->
-        publicClient = new Gdax.PublicClient currency
 
-        callback = (err, json)->
-          if err
-            reject err
-
-          obj = {}
-          obj[currency] = JSON.parse json.body
-
-          resolve obj
-
-
-        publicClient.getProduct24HrStats callback
-
-    allCurrencyStats = R.map currencyStats, currencies
+    allCurrencyStats = R.map getProduct24HrStats, currencies
 
     rejectPromise = ( promise )->
       reject promise
@@ -58,4 +59,5 @@ stats = ( currencies = [] )->
 
 module.exports =
   cancelAllOrders: cancelAllOrders
+  getProduct24HrStats: getProduct24HrStats
   stats: stats

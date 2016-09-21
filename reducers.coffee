@@ -25,10 +25,17 @@ todoApp = (state, action) ->
 
 
   foo = ( value, key )->
-    regress = regression 'linear', [ [ 0, parseFloat(value.open) ], [ ( 24 * 60 * 60 ), parseFloat( value.last ) ] ]
+    regress = regression 'linear', [ [ 0, parseFloat(value.open) ], [ ( 24 * 60 ), parseFloat( value.last ) ] ]
     regress.equation[0]
 
   state.trends = R.mapObjIndexed foo, state.stats
+
+
+  grabParts = (string)->
+    string.split '-'
+
+  console.log R.uniq R.flatten R.map grabParts, R.keys state.stats
+
 
   state
 
