@@ -1,20 +1,12 @@
+config = require './config'
+
+UPDATE_MINS = 2.5
+
 FixedInvestment = require './fixedInvestment'
 
-pricingOptions =
-  btcSize: 0.1
-  usdOffset: 0.33
-  usdInterval: 0.99
-  minimumSize: 0.01
-
-FixedInvestment 'BTC-USD', 1000, pricingOptions, 5
-
-ethPricingOptions =
-  btcSize: 1.00
-  usdOffset: 0.02
-  usdInterval: 0.05
-  minimumSize: 0.1
-
-FixedInvestment 'ETH-USD', 1250, ethPricingOptions, 6.836
+FixedInvestment 'BTC-USD', 1500, config.pricingOptions, UPDATE_MINS
+FixedInvestment 'ETH-USD', 1000, config.ethPricingOptions, UPDATE_MINS
+# FixedInvestment 'LTC-USD', 0, config.ltcPricingOptions, UPDATE_MINS
 
 # Create Updates of recent trades
 # — save new trades to database for analysis
@@ -25,3 +17,7 @@ Updates = require './saveFills'
 
 Updates 'BTC-USD', UPDATE_EVERY_HOURS
 Updates 'ETH-USD', UPDATE_EVERY_HOURS
+Updates 'LTC-USD', UPDATE_EVERY_HOURS
+
+
+Daily = require('./daily')()

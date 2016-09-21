@@ -9,6 +9,7 @@ RSVP = require 'rsvp'
 moment = require 'moment'
 
 stream = require './lib/stream'
+gdax = require './lib/gdax-client'
 coinbaseClient = require './lib/coinbase-client'
 coinbasePublicClient = require './lib/coinbase-public-client'
 pricing = require './pricing'
@@ -23,6 +24,11 @@ ProcessFills = require './lib/saveFills'
 matchCurrency = (currency)->
   (account)->
     account.currency is currency
+
+
+average = ( formattedStringPrices )->
+  sum = R.sum R.map parseFloat, formattedStringPrices
+  sum / formattedStringPrices.length
 
 
 fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes = 60)->
@@ -59,6 +65,15 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
     # console.log 'cancelPreviousOrders', orders
     new RSVP.Promise (resolve, reject)->
 
+
+      mapIndexed = R.addIndex R.map
+
+      delayedCancelOrder = (order, index)->
+        client.delayedCancel(order, index )
+
+      cancellations = mapIndexed delayedCancelOrder, orders
+
+
       onThen = (data)->
         # console.log 'onThen', data
         resolve data
@@ -66,7 +81,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
       onError = (data)->
         reject data
 
-      RSVP.all( R.map client.cancelOrder, orders ).then( onThen ).catch( onError )
+      RSVP.all( cancellations ).then( onThen ).catch( onError )
 
 
   removeCurrentOrders = (orders)->
@@ -74,7 +89,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
     new RSVP.Promise ( resolve, reject )->
 
       alreadyDone = (order)->
-        order.message is 'Order already done' or order.message is 'OK'
+        order.message is 'Order already done' or order.message is 'NotFound' or order.message is 'OK'
 
       resolve R.pluck 'id', R.reject alreadyDone, orders
 
@@ -107,7 +122,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
     # Determine your position
     determinePosition = (stats)->
-      log JSON.stringify(stats), 'determinePosition'
+      # log JSON.stringify(stats), 'determinePosition'
       new RSVP.Promise (resolve, reject)->
 
         determine = (data)->
@@ -119,15 +134,17 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
           volumeAdjustment = 1.0
           if volumeDiff > 1.0
             volumeAdjustment = volumeDiff
-            log "volume adjustment", volumeDiff
-
+            # log "volume adjustment", volumeDiff
 
           sellPrice = stats.high
-          sellPrice = R.max stats.open, prices.sell if prices.sell
+          if prices.sell
+            target = average [ stats.open, stats.low ]
+            sellPrice = pricing.usd R.max target, prices.sell
 
           buyPrice = stats.low
-          buyPrice = R.min stats.open, prices.buy if prices.buy
-
+          if prices.buy
+            target = average [ stats.open, stats.high ]
+            buyPrice = pricing.usd R.min target, prices.buy
 
           bids = []
 
@@ -143,31 +160,50 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
         client.getAccounts().then determine
 
+    prioritizeNewOrders = (data)->
+      # console.log 'prioritizeNewOrders', data
+
+      getPrice = (order)->
+        parseFloat(order.price) * parseFloat(order.size)
+
+      sortByLowPrice = (a, b)->
+        getPrice(a) - getPrice(b)
+
+      new RSVP.Promise (resolve, reject)->
+        resolve R.sort sortByLowPrice, data
+
+
     # Execute new Position
     placeNewOrders = (data)->
       # console.log data, 'placeNewOrders'
       new RSVP.Promise (resolve, reject)->
-        makeOrder = (order)->
-          client.order order
 
+        mapIndexed = R.addIndex R.map
 
-        newOrders = R.map makeOrder, R.flatten data
+        makeOrder = (order, index)->
+          client.delayedOrder(order, index )
+
+        newOrders = mapIndexed makeOrder, R.flatten data
 
         RSVP.all(newOrders).then (result)->
-          orders = orders.concat R.pluck 'id', result
+          fulfilled = R.pluck 'value', R.filter R.propEq('state', 'fulfilled'), result
+          orders = orders.concat R.reject R.isNil, R.pluck 'id', fulfilled
           resolve orders
 
     # Error handling
     onError = (error)->
       console.log 'onError', error
 
+
     getCurrentOrders()
+      .then(gdax.cancelAllOrders( [ product ] ) )
       .then(cancelPreviousOrders)
       .then(removeCurrentOrders)
       .then(holdoverQuestionableOrders)
-      .then(payYourself)
+      # .then(payYourself)
       .then(getStats)
       .then(determinePosition)
+      .then(prioritizeNewOrders)
       .then(placeNewOrders)
       .catch(onError)
 

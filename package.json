@@ -23,6 +23,8 @@
     "dotenv": "^2.0.0",
     "gdax": "^0.2.1",
     "isomorphic-fetch": "^2.2.1",
+    "fib": "0.0.1",
+    "gdax": "^0.2.1",
     "mocha": "^2.3.4",
     "moment": "^2.10.6",
     "mongodb": "^2.1.18",

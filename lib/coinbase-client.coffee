@@ -1,4 +1,4 @@
-require('dotenv').load()
+require('dotenv').config({silent: true})
 R = require 'ramda'
 RSVP = require 'rsvp'
 CoinbaseExchange = require 'coinbase-exchange'
@@ -6,6 +6,8 @@ CoinbaseExchange = require 'coinbase-exchange'
 pricing = require '../pricing'
 
 authedClient = new CoinbaseExchange.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+
+INTERVAL = 1000
 
 module.exports = (product_id)->
   parcel = (options)->
@@ -40,6 +42,10 @@ module.exports = (product_id)->
           data = JSON.parse err.body
           console.log 'err', data, order
           reject err
+
+        unless json.body
+          console.log 'getAccounts', json
+          reject json.body
 
         data = JSON.parse json.body
         filterCurrency = (account)->
@@ -84,11 +90,29 @@ module.exports = (product_id)->
     new RSVP.Promise (resolve, reject)->
       callback = (err, json)->
         if err
-          console.log err
-          reject err
+          console.log 'error starts here'
+          # console.log
+          #   err: err
+          #   json: json
+          #   order: order
 
-        data = JSON.parse json.body
-        resolve data
+          console.log 'error ends here'
+
+          reject
+            err: err
+            json: json
+            order: order
+
+        if json and json.body
+
+          data = JSON.parse json.body
+          resolve data
+
+        # console.log 'order', json
+        reject
+          err: err
+          json: json
+          order: order
 
       if order.side is 'buy'
         buy order, callback
@@ -96,23 +120,65 @@ module.exports = (product_id)->
       if order.side is 'sell'
         sell order, callback
 
+  delayedOrder = (payload, index = 0)->
+    new RSVP.Promise (resolve, reject)->
+
+      onGood = (data)->
+        # console.log 'onGood', data
+        resolve data
+
+      onBad = (data)->
+        console.log 'onBad', data
+        reject data
+
+      makeOrder = ->
+        # console.log payload
+        order(payload).then(onGood).catch(onBad)
+
+      setTimeout makeOrder, ( index * INTERVAL )
+
 
   cancelOrder = ( order )->
     new RSVP.Promise (resolve, reject)->
       callback = (err, data)->
         if err
-          data = JSON.parse err.body
-          console.log 'err', data, order
+          # data = JSON.parse err.body
+          console.log 'err', err, order
+
+        unless data
+          console.log 'failed cancel, data:', data
+          reject failed: cancelOrder: order
 
         obj = {}
-        payload = data.body
+
+        payload = JSON.parse data.body
         payload = (JSON.parse data.body).message unless payload is 'OK'
+        # payload = 'Found' if order is data.body[0]
+        # console.log 'check', order, data.body[0]
 
         obj.id = order
         obj.message = payload
+
         resolve obj
 
       authedClient.cancelOrder order, callback
+
+  delayedCancel = (payload, index)->
+    new RSVP.Promise (resolve, reject)->
+
+      onGood = (data)->
+        resolve data
+
+      onBad = (data)->
+        reject data
+
+      curryCancelOrder = ->
+        # console.log payload
+        cancelOrder(payload).then(onGood).catch(onBad)
+
+      setTimeout curryCancelOrder, ( index * INTERVAL )
+
+
 
   getFills = (product = product_id)->
     new RSVP.Promise (resolve, reject)->
@@ -125,6 +191,13 @@ module.exports = (product_id)->
 
   # console.log getFills
 
+  cancelOrders = ->
+    new RSVP.Promise (resolve, reject)->
+      authedClient.cancelOrders (data)->
+        console.log data
+        resolve data
+
+
   functions =
     stats: stats
     getAccounts: getAccounts
@@ -133,5 +206,8 @@ module.exports = (product_id)->
     # orders: getOrders
     withdraw: withdraw
     cancelOrder: cancelOrder
+    delayedCancel: delayedCancel
     order: order
+    delayedOrder: delayedOrder
     getFills: getFills
+    cancelOrders: cancelOrders

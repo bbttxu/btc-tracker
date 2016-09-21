@@ -1,6 +1,6 @@
 uuid = require 'uuid'
 
-require('dotenv').load()
+require('dotenv').config({silent: true})
 
 CoinbaseExchange = require 'coinbase-exchange'
 
