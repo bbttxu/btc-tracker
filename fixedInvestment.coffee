@@ -9,6 +9,7 @@ RSVP = require 'rsvp'
 moment = require 'moment'
 
 stream = require './lib/stream'
+gdax = require './lib/gdax-client'
 coinbaseClient = require './lib/coinbase-client'
 coinbasePublicClient = require './lib/coinbase-public-client'
 pricing = require './pricing'
@@ -23,6 +24,11 @@ ProcessFills = require './lib/saveFills'
 matchCurrency = (currency)->
   (account)->
     account.currency is currency
+
+
+average = ( formattedStringPrices )->
+  sum = R.sum R.map parseFloat, formattedStringPrices
+  sum / formattedStringPrices.length
 
 
 fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes = 60)->
@@ -63,7 +69,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
       mapIndexed = R.addIndex R.map
 
       delayedCancelOrder = (order, index)->
-        client.delayedCancel(order, (index * 100))
+        client.delayedCancel(order, index )
 
       cancellations = mapIndexed delayedCancelOrder, orders
 
@@ -116,7 +122,7 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
 
     # Determine your position
     determinePosition = (stats)->
-      log JSON.stringify(stats), 'determinePosition'
+      # log JSON.stringify(stats), 'determinePosition'
       new RSVP.Promise (resolve, reject)->
 
         determine = (data)->
@@ -128,29 +134,17 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
           volumeAdjustment = 1.0
           if volumeDiff > 1.0
             volumeAdjustment = volumeDiff
-            log "volume adjustment", volumeDiff
-
+            # log "volume adjustment", volumeDiff
 
           sellPrice = stats.high
-          # sellPrice = R.max stats.open, prices.sell if prices.sell
           if prices.sell
-            # FIXME TODO create average value function
-            open = parseFloat stats.open
-            low = parseFloat stats.low
-            mid = (open + low) / 2.0
-            # console.log '(', open, '+', low, ') / 2.0 =', mid, 'vs', prices.sell, 'sell', product
-            sellPrice = pricing.usd R.max mid, prices.sell
+            target = average [ stats.open, stats.low ]
+            sellPrice = pricing.usd R.max target, prices.sell
 
           buyPrice = stats.low
-          # buyPrice = R.min stats.open, prices.buy if prices.buy
           if prices.buy
-            # FIXME TODO create average value function
-            open = parseFloat stats.open
-            high = parseFloat stats.high
-            mid = (open + high) / 2.0
-            # console.log '(', open, '+', high, ') / 2.0 =', mid, 'vs', prices.buy, 'buy', product
-            buyPrice = pricing.usd R.min mid, prices.buy
-
+            target = average [ stats.open, stats.high ]
+            buyPrice = pricing.usd R.min target, prices.buy
 
           bids = []
 
@@ -187,11 +181,11 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
         mapIndexed = R.addIndex R.map
 
         makeOrder = (order, index)->
-          client.delayedOrder(order, (index * 100))
+          client.delayedOrder(order, index )
 
         newOrders = mapIndexed makeOrder, R.flatten data
 
-        RSVP.allSettled(newOrders).then (result)->
+        RSVP.all(newOrders).then (result)->
           fulfilled = R.pluck 'value', R.filter R.propEq('state', 'fulfilled'), result
           orders = orders.concat R.reject R.isNil, R.pluck 'id', fulfilled
           resolve orders
@@ -200,7 +194,9 @@ fixedInvestment = (product = 'BTC-USD', investment, pricingOptions = {}, minutes
     onError = (error)->
       console.log 'onError', error
 
+
     getCurrentOrders()
+      .then(gdax.cancelAllOrders( [ product ] ) )
       .then(cancelPreviousOrders)
       .then(removeCurrentOrders)
       .then(holdoverQuestionableOrders)

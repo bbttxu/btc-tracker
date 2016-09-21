@@ -1,4 +1,4 @@
-require('dotenv').load()
+require('dotenv').config({silent: true})
 R = require 'ramda'
 RSVP = require 'rsvp'
 CoinbaseExchange = require 'coinbase-exchange'
@@ -6,6 +6,8 @@ CoinbaseExchange = require 'coinbase-exchange'
 pricing = require '../pricing'
 
 authedClient = new CoinbaseExchange.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+
+INTERVAL = 1000
 
 module.exports = (product_id)->
   parcel = (options)->
@@ -89,10 +91,10 @@ module.exports = (product_id)->
       callback = (err, json)->
         if err
           console.log 'error starts here'
-          console.log
-            err: err
-            json: json
-            order: order
+          # console.log
+          #   err: err
+          #   json: json
+          #   order: order
 
           console.log 'error ends here'
 
@@ -101,15 +103,16 @@ module.exports = (product_id)->
             json: json
             order: order
 
-        unless json
-          console.log 'order', json
-          reject
-            err: err
-            json: json
-            order: order
+        if json and json.body
 
-        data = JSON.parse json.body
-        resolve data
+          data = JSON.parse json.body
+          resolve data
+
+        # console.log 'order', json
+        reject
+          err: err
+          json: json
+          order: order
 
       if order.side is 'buy'
         buy order, callback
@@ -117,20 +120,22 @@ module.exports = (product_id)->
       if order.side is 'sell'
         sell order, callback
 
-  delayedOrder = (payload, timeout)->
+  delayedOrder = (payload, index = 0)->
     new RSVP.Promise (resolve, reject)->
 
       onGood = (data)->
+        # console.log 'onGood', data
         resolve data
 
       onBad = (data)->
+        console.log 'onBad', data
         reject data
 
       makeOrder = ->
         # console.log payload
         order(payload).then(onGood).catch(onBad)
 
-      setTimeout makeOrder, timeout
+      setTimeout makeOrder, ( index * INTERVAL )
 
 
   cancelOrder = ( order )->
@@ -158,7 +163,7 @@ module.exports = (product_id)->
 
       authedClient.cancelOrder order, callback
 
-  delayedCancel = (payload, timeout)->
+  delayedCancel = (payload, index)->
     new RSVP.Promise (resolve, reject)->
 
       onGood = (data)->
@@ -171,7 +176,7 @@ module.exports = (product_id)->
         # console.log payload
         cancelOrder(payload).then(onGood).catch(onBad)
 
-      setTimeout curryCancelOrder, timeout
+      setTimeout curryCancelOrder, ( index * INTERVAL )
 
 
 
