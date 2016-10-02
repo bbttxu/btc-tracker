@@ -7,6 +7,7 @@ actions =
   ORDER_MATCHED: 'ORDER_MATCHED'
   REQUEST_STATS: 'REQUEST_STATS'
   UPDATE_STATS: 'UPDATE_STATS'
+  UPDATE_ACCOUNTS: 'UPDATE_ACCOUNTS'
 
 creators =
   requestStats: (product)->

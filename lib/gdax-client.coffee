@@ -57,7 +57,17 @@ stats = ( currencies = [] )->
 
     RSVP.all( allCurrencyStats ).then( resolveIssues ).catch( rejectPromise )
 
+getAccounts = ( currency )->
+  new RSVP.Promise ( resolve, reject )->
+    callback = (err, json)->
+      reject err if err
+
+      resolve JSON.parse json.body
+
+    authedClient.getAccounts callback
+
 module.exports =
   cancelAllOrders: cancelAllOrders
   getProduct24HrStats: getProduct24HrStats
   stats: stats
+  getAccounts: getAccounts

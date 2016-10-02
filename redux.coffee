@@ -6,7 +6,7 @@ R = require 'ramda'
 
 gdax = require './lib/gdax-client'
 
-{ORDER_MATCHED, UPDATE_STATS} = require './actions'
+{ORDER_MATCHED, UPDATE_STATS, UPDATE_ACCOUNTS} = require './actions'
 
 reducers = require './reducers'
 
@@ -18,12 +18,26 @@ store.subscribe (foo)->
 Stream = require './lib/stream'
 
 
-currencies = ['BTC-USD', 'ETH-USD', 'ETH-BTC', 'LTC-USD', 'LTC-BTC' ]
+currencies = [
+  'BTC-USD',
+  'ETH-USD',
+  'ETH-BTC',
+  # 'LTC-USD',
+  # 'LTC-BTC',
+]
 
 currencyStream = (product)->
   stream = Stream product
 
+  stream.on 'error', (foo)->
+
+    console.log 'error'
+    console.log foo
+
+
   stream.on 'message', (foo)->
+
+    # console.log foo
     if foo.type is 'match'
       store.dispatch
         type: ORDER_MATCHED
@@ -48,6 +62,24 @@ updateStats = ->
 
 updateStats()
 setInterval updateStats, 60 * 1000
+
+
+updateAccounts = ->
+  onSuccess = ( data )->
+    console.log 'data', data
+    store.dispatch
+      type: UPDATE_ACCOUNTS
+      accounts: data
+
+
+  onError = ( error )->
+    console.log 'onError', error
+
+  gdax.getAccounts().then( onSuccess ).catch( onError )
+
+updateAccounts()
+setInterval updateAccounts, 60 * 60 * 1000
+
 
 # store.dispatch fetchStats 'BTC-USD'
     # console.log ORDER_MATCHED, foo
