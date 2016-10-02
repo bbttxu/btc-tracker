@@ -1,9 +1,14 @@
 R = require 'ramda'
+moment = require 'moment'
 
 regression = require 'regression'
 
+def = require './def'
+
 initialState =
+  filled: []
   prices: {}
+  rates: {}
   stats:
     'USD-USD':
       open: 1
@@ -20,6 +25,24 @@ todoApp = (state, action) ->
 
     state.prices[order.product_id] = {} unless state.prices[order.product_id]
     state.prices[order.product_id][order.side] = order.price
+
+    values = [ 'side', 'price', 'product_id', 'time' ]
+
+    order = R.pick values, order
+    order.time = moment( order.time ).unix()
+
+    state.filled.push order
+
+    asdf = def order.product_id, order.side, state.filled
+
+    if asdf
+      # it might not exist
+      state.rates[order.product_id] = {} unless state.rates[order.product_id]
+
+      # update with new slope
+      state.rates[order.product_id][order.side] = asdf[0]
+
+
 
   if action.type is 'REQUEST_STATS'
     console.log action.stats
@@ -67,74 +90,71 @@ todoApp = (state, action) ->
 
   normalizeTrend state.trends
 
-  up = ( value, key )->
-    return true if value.normalizedM > 0
-
-  state.sells = R.pickBy up, state.trends
-
-  state.buys = R.omit R.keys(state.sells), state.trends
-
-  asdf = (value, key)->
-    parts = key.split '-'
-    value.sell = parts[0]
-    value.buy = parts[1]
-    value
+  # console.log action.order.product_id
 
 
 
-  foo = R.values R.mapObjIndexed asdf, state.sells
-
-  # console.log foo
-
-  reduceFoo = (foo)->
-    sorted = R.reverse R.sortBy R.prop('normalizedM'), foo
-
-    doNotBuy = []
-
-    filterStuff = (z)->
-      zzz = doNotBuy
-
-      doNotBuy = R.uniq doNotBuy.concat z.sell
-
-      return ! R.contains z.buy, zzz
-
-    c = R.filter filterStuff, sorted
-
-    c
-
-  # console.log "\n***\n"
-
-  # console.log foo
-  highs = reduceFoo foo
-  console.log 'highs', highs
-
-  reduceBar = (foo)->
-    sorted = R.sortBy R.prop('normalizedM'), foo
-
-    doNotBuy = []
-
-    filterStuff = (z)->
-      zzz = doNotBuy
-
-      doNotBuy = R.uniq doNotBuy.concat z.sell
-
-      return ! R.contains z.buy, zzz
-
-    c = R.filter filterStuff, sorted
-
-    c
 
 
+  # up = ( value, key )->
+  #   return true if value.normalizedM > 0
+
+  # state.sells = R.pickBy up, state.trends
+
+  # state.buys = R.omit R.keys(state.sells), state.trends
+
+  # asdf = (value, key)->
+  #   parts = key.split '-'
+  #   value.sell = parts[0]
+  #   value.buy = parts[1]
+  #   value
+
+
+
+  # foo = R.values R.mapObjIndexed asdf, state.sells
+
+  # reduceFoo = (foo)->
+  #   sorted = R.reverse R.sortBy R.prop('normalizedM'), foo
+
+  #   doNotBuy = []
+
+  #   filterStuff = (z)->
+  #     zzz = doNotBuy
+
+  #     doNotBuy = R.uniq doNotBuy.concat z.sell
+
+  #     return ! R.contains z.buy, zzz
+
+  #   c = R.filter filterStuff, sorted
+
+  #   c
 
   # console.log "\n***\n"
 
-  bar = R.values R.mapObjIndexed asdf, state.buys
+  # console.log foo
+  # highs = reduceFoo foo
+  # console.log 'highs', highs
 
-  # console.log bar
-  lows = reduceBar bar
-  console.log 'lows', lows
+  # reduceBar = (foo)->
+  #   sorted = R.sortBy R.prop('normalizedM'), foo
 
-  # console.log R.values R.mapObjIndexed asdf, state.buys
+  #   doNotBuy = []
+
+  #   filterStuff = (z)->
+  #     zzz = doNotBuy
+
+  #     doNotBuy = R.uniq doNotBuy.concat z.sell
+
+  #     return ! R.contains z.buy, zzz
+
+  #   c = R.filter filterStuff, sorted
+
+  #   c
+
+  # bar = R.values R.mapObjIndexed asdf, state.buys
+
+  # lows = reduceBar bar
+  # console.log 'lows', lows
 
   state
 

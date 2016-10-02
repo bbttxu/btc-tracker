@@ -13,7 +13,10 @@ reducers = require './reducers'
 store = createStore reducers, applyMiddleware(thunk.default)
 
 store.subscribe (foo)->
-  console.log new Date(), store.getState()
+  keys = [ 'prices', 'rates' ]
+
+  # console.log new Date(), R.keys store.getState()
+  console.log new Date(), R.pick keys, store.getState()
 
 Stream = require './lib/stream'
 
@@ -22,8 +25,8 @@ currencies = [
   'BTC-USD',
   'ETH-USD',
   'ETH-BTC',
-  # 'LTC-USD',
-  # 'LTC-BTC',
+  'LTC-USD',
+  'LTC-BTC',
 ]
 
 currencyStream = (product)->
@@ -36,8 +39,6 @@ currencyStream = (product)->
 
 
   stream.on 'message', (foo)->
-
-    # console.log foo
     if foo.type is 'match'
       store.dispatch
         type: ORDER_MATCHED
@@ -66,7 +67,6 @@ setInterval updateStats, 60 * 1000
 
 updateAccounts = ->
   onSuccess = ( data )->
-    console.log 'data', data
     store.dispatch
       type: UPDATE_ACCOUNTS
       accounts: data
