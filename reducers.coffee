@@ -4,6 +4,7 @@ moment = require 'moment'
 regression = require 'regression'
 
 def = require './def'
+ghi = require './ghi'
 
 initialState =
   filled: []
@@ -29,11 +30,11 @@ todoApp = (state, action) ->
     values = [ 'side', 'price', 'product_id', 'time' ]
 
     order = R.pick values, order
-    order.time = moment( order.time ).unix()
+    order.time = moment( order.time ).valueOf()
 
     state.filled.push order
 
-    asdf = def order.product_id, order.side, state.filled
+    asdf = def order.product_id, order.side, 60, state.filled
 
     if asdf
       # it might not exist
@@ -41,6 +42,10 @@ todoApp = (state, action) ->
 
       # update with new slope
       state.rates[order.product_id][order.side] = asdf[0]
+
+    state.filled = ghi 60, state.filled
+
+    console.log state.filled.length, 'length'
 
 
 
