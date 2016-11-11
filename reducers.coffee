@@ -6,6 +6,8 @@ regression = require 'regression'
 def = require './def'
 ghi = require './ghi'
 
+pricing = require './pricing'
+
 initialState =
   filled: []
   prices: {}
@@ -34,18 +36,31 @@ todoApp = (state, action) ->
 
     state.filled.push order
 
-    asdf = def order.product_id, order.side, 60, state.filled
+    asdf = def order.product_id, order.side, 300, state.filled
 
     if asdf
       # it might not exist
       state.rates[order.product_id] = {} unless state.rates[order.product_id]
 
       # update with new slope
-      state.rates[order.product_id][order.side] = asdf[0]
 
-    state.filled = ghi 60, state.filled
+      # console.log asdf
 
-    console.log state.filled.length, 'length'
+      # state.rates[order.product_id][order.side] = asdf[0]
+
+      x = moment().valueOf() + 300
+      ymxb = ( asdf[0] * x ) + asdf[1]
+
+      console.log moment().format('X')
+
+      state.rates[order.product_id][order.side + 'Projection'] = pricing.btc ymxb
+      state.rates[order.product_id][order.side + 'OverUnder'] = pricing.usd ( ymxb - state.prices[order.product_id][order.side] )
+
+
+
+    state.filled = ghi 300, state.filled
+
+    # console.log state.filled.length, 'length'
 
 
 

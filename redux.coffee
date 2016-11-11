@@ -14,6 +14,7 @@ store = createStore reducers, applyMiddleware(thunk.default)
 
 store.subscribe (foo)->
   keys = [ 'prices', 'rates' ]
+  keys = [ 'rates' ]
 
   # console.log new Date(), R.keys store.getState()
   console.log new Date(), R.pick keys, store.getState()
@@ -62,7 +63,7 @@ updateStats = ->
   gdax.stats( currencies ).then( onThen ).catch( onError )
 
 updateStats()
-setInterval updateStats, 60 * 1000
+setInterval updateStats, 1 * 1000
 
 
 updateAccounts = ->
