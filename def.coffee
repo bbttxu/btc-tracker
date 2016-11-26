@@ -29,7 +29,7 @@ module.exports = ( product_id, side, duration, orders )->
 
     equation = R.reject isNaN, R.filter isFinite, regress.equation
 
-    console.log equation
+    # console.log equation
 
     return equation if equation.length is 2
 

@@ -1,17 +1,24 @@
 R = require 'ramda'
 moment = require 'moment'
+uuid = require 'uuid'
 
 regression = require 'regression'
+
+
 
 def = require './def'
 ghi = require './ghi'
 
 pricing = require './pricing'
 
+
+INTERVAL = 900
+
 initialState =
   filled: []
   prices: {}
   rates: {}
+  bids: []
   stats:
     'USD-USD':
       open: 1
@@ -36,29 +43,34 @@ todoApp = (state, action) ->
 
     state.filled.push order
 
-    asdf = def order.product_id, order.side, 300, state.filled
+    asdf = def order.product_id, order.side, INTERVAL, state.filled
 
     if asdf
       # it might not exist
       state.rates[order.product_id] = {} unless state.rates[order.product_id]
 
       # update with new slope
-
-      # console.log asdf
-
-      # state.rates[order.product_id][order.side] = asdf[0]
-
-      x = moment().valueOf() + 300
+      x = moment().valueOf() + INTERVAL
       ymxb = ( asdf[0] * x ) + asdf[1]
 
-      console.log moment().format('X')
+      projectedPrice = pricing.btc ymxb
+      projectedPriceChange = pricing.usd ( ymxb - state.prices[order.product_id][order.side] )
 
-      state.rates[order.product_id][order.side + 'Projection'] = pricing.btc ymxb
-      state.rates[order.product_id][order.side + 'OverUnder'] = pricing.usd ( ymxb - state.prices[order.product_id][order.side] )
+      state.rates[order.product_id][order.side] = projectedPrice
+      state.rates[order.product_id][order.side + 'Diff'] = projectedPriceChange
+
+      value = parseFloat projectedPriceChange
+
+      if value <= 0 and order.side is 'sell'
+        delete state.rates[order.product_id][order.side]
+        delete state.rates[order.product_id][order.side + 'Diff']
+
+      if value >= 0 and order.side is 'buy'
+        delete state.rates[order.product_id][order.side]
+        delete state.rates[order.product_id][order.side + 'Diff']
 
 
-
-    state.filled = ghi 300, state.filled
+    state.filled = ghi INTERVAL, state.filled
 
     # console.log state.filled.length, 'length'
 
@@ -110,71 +122,32 @@ todoApp = (state, action) ->
 
   normalizeTrend state.trends
 
-  # console.log action.order.product_id
+  foo = (asdf, currency)->
+    createBid = ( sell, side )->
+      data =
+        side: side
+        price: sell
+        product_id: currency
+        client_oid: uuid.v4()
+
+      # console.log 'data', data
+      data
+
+    sides = R.pick ['sell', 'buy'], asdf
+
+    R.map createBid, sides
+
+    akdfjk = R.values R.mapObjIndexed createBid, sides
+    akdfjk
 
 
 
 
+  bids = R.flatten R.values R.mapObjIndexed foo, state.rates
 
-  # up = ( value, key )->
-  #   return true if value.normalizedM > 0
+  # console.log 'bids', bids
 
-  # state.sells = R.pickBy up, state.trends
-
-  # state.buys = R.omit R.keys(state.sells), state.trends
-
-  # asdf = (value, key)->
-  #   parts = key.split '-'
-  #   value.sell = parts[0]
-  #   value.buy = parts[1]
-  #   value
-
-
-
-  # foo = R.values R.mapObjIndexed asdf, state.sells
-
-  # reduceFoo = (foo)->
-  #   sorted = R.reverse R.sortBy R.prop('normalizedM'), foo
-
-  #   doNotBuy = []
-
-  #   filterStuff = (z)->
-  #     zzz = doNotBuy
-
-  #     doNotBuy = R.uniq doNotBuy.concat z.sell
-
-  #     return ! R.contains z.buy, zzz
-
-  #   c = R.filter filterStuff, sorted
-
-  #   c
-
-  # console.log "\n***\n"
-
-  # console.log foo
-  # highs = reduceFoo foo
-  # console.log 'highs', highs
-
-  # reduceBar = (foo)->
-  #   sorted = R.sortBy R.prop('normalizedM'), foo
-
-  #   doNotBuy = []
-
-  #   filterStuff = (z)->
-  #     zzz = doNotBuy
-
-  #     doNotBuy = R.uniq doNotBuy.concat z.sell
-
-  #     return ! R.contains z.buy, zzz
-
-  #   c = R.filter filterStuff, sorted
-
-  #   c
-
-  # bar = R.values R.mapObjIndexed asdf, state.buys
-
-  # lows = reduceBar bar
-  # console.log 'lows', lows
+  state.bids = bids
 
   state
 
