@@ -14,15 +14,4 @@ currencies = [
 
 sides = [ 'sell', 'buy']
 
-
 R.map recordMatches, currencies
-
-
-
-
-quantizeData = require './jkl'
-
-
-
-quantizeData( 'ETH-USD', 'buy', 600 ).then (data)->
-  console.log data
