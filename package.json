@@ -32,7 +32,7 @@
     "redux": "^3.6.0",
     "redux-thunk": "^2.1.0",
     "regression": "^1.2.1",
-    "rsvp": "^3.2.1",
+    "rsvp": "^3.3.3",
     "should": "^9.0.0",
     "throttle-debounce": "^1.0.1",
     "uuid": "^2.0.1",
