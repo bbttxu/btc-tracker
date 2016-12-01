@@ -1,6 +1,6 @@
 require('dotenv').config( silent: true )
 
-RSVP = require 'RSVP'
+RSVP = require 'rsvp'
 R = require 'ramda'
 
 module.exports = ->
