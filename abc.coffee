@@ -15,3 +15,9 @@ currencies = [
 sides = [ 'sell', 'buy']
 
 R.map recordMatches, currencies
+
+
+showStats = require './ml'
+
+setInterval showStats, 60 * 1000
+showStats()

@@ -5,6 +5,7 @@ R = require 'ramda'
 RSVP = require 'rsvp'
 moment = require 'moment'
 
+pricing = require './pricing'
 
 smallPotatoes = (doc)->
   doc.volume is 0 or doc.delta is 0
@@ -30,8 +31,8 @@ module.exports = ( product, side, interval = 60 )->
     high = Math.max.apply this, prices
     low = Math.min.apply this, prices
 
-    obj.volume = Math.floor R.sum R.pluck 'size', docs
-    obj.delta = Math.floor ( high - low ) * 100
+    obj.volume = parseFloat pricing.btc R.sum R.pluck 'size', docs
+    obj.delta = Math.round ( high - low ) * 100
     obj.high = high
     obj.low = low
     obj.n = docs.length
@@ -43,8 +44,6 @@ module.exports = ( product, side, interval = 60 )->
       reject err if err
 
       collection = db.collection 'matches'
-
-      console.log search
 
       foo = collection.find( search ).toArray (err, docs)->
         db.close()
