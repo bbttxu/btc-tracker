@@ -7,7 +7,7 @@ pricing = require '../pricing'
 
 spreadPrice = (settings)->
   (price, size)->
-    console.log "#{moment().format()} #{settings.side.toUpperCase()} #{pricing.btc(size, 3)} #{settings.product.toUpperCase()} @ #{acct.formatMoney(price)}"
+    # console.log "#{moment().format()} #{settings.side.toUpperCase()} #{pricing.btc(size, 3)} #{settings.product.toUpperCase()} @ #{acct.formatMoney(price)}"
 
     # A negative size will fail later, return early with empty array
     return [] if size < 0
