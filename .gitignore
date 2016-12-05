@@ -38,3 +38,6 @@ elm-stuff/
 *.html
 *.sh
 *.txt
+
+coverage/
+
