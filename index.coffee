@@ -29,3 +29,9 @@ UPDATE_EVERY_HOURS = 1
 
 
 
+showStats = require './ml'
+
+setInterval showStats, 60 * 1000
+showStats()
+
+

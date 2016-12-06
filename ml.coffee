@@ -22,7 +22,7 @@ module.exports = ->
 
   correlationCount = require './correlationCount'
 
-  INTERVAL = 60
+  INTERVAL = 7
 
   catchError = (foo)->
     console.log 'caught', foo
