@@ -8,9 +8,9 @@ module.exports = ->
   currencies = [
     'BTC-USD',
     'ETH-USD',
-    # 'ETH-BTC',
-    # 'LTC-USD',
-    # 'LTC-BTC',
+    'ETH-BTC',
+    'LTC-USD',
+    'LTC-BTC',
   ]
 
   sides = [

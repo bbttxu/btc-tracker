@@ -29,9 +29,14 @@ UPDATE_EVERY_HOURS = 1
 
 
 
-# showStats = require './ml'
+showStats = require './ml'
 
-# setInterval showStats, 60 * 1000
+setInterval showStats, 60 * 1000
 # showStats()
 
 
+process.on 'uncaughtException', (exception) ->
+  console.log exception
+
+process.on 'unhandledRejection', (reason, p) ->
+  console.log 'Unhandled Rejection at: Promise ', p, ' reason: ', reason
