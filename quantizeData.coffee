@@ -32,7 +32,7 @@ module.exports = ( product, side, interval = 60 )->
     low = Math.min.apply this, prices
 
     obj.volume = parseFloat pricing.btc R.sum R.pluck 'size', docs
-    obj.delta = Math.round ( high - low ) * 100
+    obj.delta = pricing.btc( high - low )
     obj.high = high
     obj.low = low
     obj.n = docs.length
