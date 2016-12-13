@@ -35,11 +35,14 @@ letsDoCurrencies = ( currency )->
       side: side
       time:
         $gte: moment().subtract( INTERVAL, 's' ).format()
+      # interval: INTERVAL
 
   R.map addSide, sides
 
 
 docsToCartesian = (doc)->
+  # console.log doc
+  # doc
   x = moment( doc.time ).unix()
   y = parseFloat doc.price
   coords =
@@ -53,12 +56,16 @@ makeStats = (docs)->
   intercept = equation[1]
 
   stats = {}
+    # slope: equation[0]
+    # intercept: equation[1]
 
   latest = R.last docs
 
   if latest
     latestPrice = parseFloat latest.price
     now = moment().add( INTERVAL, 'seconds' ).unix()
+    # stats.projection = latestPrice
+    # stats.last = pricing.btc latestPrice
 
     x = moment().valueOf() + INTERVAL
     ymxb = pricing.usd ( slope * now ) + intercept
@@ -77,6 +84,8 @@ makeIntervalStats = (docs)->
       moment( data.time ).isBefore backTo
 
     pastInterval = R.reject beforeBackTo, docs
+
+    # console.log interval, pastInterval.length
 
     obj = {}
     obj[ interval ] = makeStats pastInterval
@@ -119,9 +128,11 @@ getResult = ( results )->
 
   R.mapObjIndexed showObjects, results
 
+  # console.log results
+
 
 asdf = ->
   RSVP.hashSettled( keyed ).then( getResult ).catch( catchProblem )
 
 asdf()
-setInterval asdf, 6000
+setInterval asdf, 60000
