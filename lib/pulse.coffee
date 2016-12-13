@@ -15,8 +15,14 @@ pulse = ( threshold )->
     lastPrice = R.last(prices)
 
     # Price change is greater than the threshold
-    priceSignal = Math.abs( ( lastPrice - firstPrice ) - threshold.price ) > 0
+    priceSignal = ( ( lastPrice - firstPrice ) - threshold.price) > 0
 
+    # If threshold price is negative, negate priceSignal value
+    if threshold.price < 0
+      priceSignal = not priceSignal
+
+    # true if either is
     volumeSignal or priceSignal
+
 
 module.exports = pulse
