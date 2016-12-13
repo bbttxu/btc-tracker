@@ -67,41 +67,55 @@ describe 'price signal', ->
 
     weakSignal.should.be.eql false
 
-  it 'small insignificant positive price signal returns no pulse', ->
+  it 'insignificant positive price signal returns no pulse', ->
     strongPulse = pulse
       volume: 0.00
       price: 0.1
 
-    positivePulse = strongPulse [
+    weakSignal = strongPulse [
       price: 8.56
     ,
       price: 8.58
     ]
 
-    positivePulse.should.be.eql true
+    weakSignal.should.be.eql false
 
-  it 'small significant positive price signal returns pulse', ->
+  it 'significant positive price signal returns pulse', ->
     strongPulse = pulse
       volume: 0.00
       price: 0.01
 
-    positivePulse = strongPulse [
+    strongSignal = strongPulse [
       price: 8.56
     ,
       price: 8.58
     ]
 
-    positivePulse.should.be.eql true
+    strongSignal.should.be.eql true
 
-  it 'small negative price signal returns pulse', ->
+  it 'insignificant negative price signal returns no pulse', ->
     strongPulse = pulse
       volume: 0.00
-      price: -0.01
+      price: -0.1
 
-    positivePulse = strongPulse [
+    weakSignal = strongPulse [
       price: 8.56
     ,
       price: 8.54
     ]
 
-    positivePulse.should.be.eql true
+    weakSignal.should.be.eql false
+
+
+  it 'signifcant negative price signal returns pulse', ->
+    strongPulse = pulse
+      volume: 0.00
+      price: -0.01
+
+    strongSignal = strongPulse [
+      price: 8.56
+    ,
+      price: 8.54
+    ]
+
+    strongSignal.should.be.eql true
